@@ -30,7 +30,7 @@ export default function CartDrawer() {
           >
             <div className="p-6 border-b border-primary/10 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-display font-semibold">Shopping Bag</h2>
+                <h2 className="text-xl font-display font-semibold">Shopping Cart</h2>
               </div>
               <button 
                 onClick={() => setIsCartOpen(false)}
@@ -43,7 +43,7 @@ export default function CartDrawer() {
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {cart.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
-                  <p className="opacity-50">Your bag is empty</p>
+                  <p className="opacity-50">Your cart is empty</p>
                   <button 
                     onClick={() => setIsCartOpen(false)}
                     className="btn-outline"
@@ -55,12 +55,14 @@ export default function CartDrawer() {
                 cart.map((item) => (
                   <div key={item.id} className="flex gap-4 group">
                     <div className="w-24 h-24 rounded-lg overflow-hidden bg-primary/5 border border-primary/10">
-                      <img 
-                        src={item.image} 
-                        alt={item.name} 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        referrerPolicy="no-referrer"
-                      />
+                      {item.image && (
+                        <img 
+                          src={item.image} 
+                          alt={item.name} 
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          referrerPolicy="no-referrer"
+                        />
+                      )}
                     </div>
                     <div className="flex-1 space-y-1">
                       <Link 

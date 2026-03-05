@@ -2,15 +2,27 @@ import { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { formatPrice } from '../utils';
 import { motion } from 'motion/react';
-import { CreditCard, Truck, CheckCircle2, ArrowRight } from 'lucide-react';
+import { CreditCard, Truck, CheckCircle2, ArrowRight, Wallet, Smartphone, Banknote } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
+type PaymentMethod = 'cod' | 'bkash' | 'nagad' | 'rocket' | 'card';
+
 export default function Checkout() {
-  const { cart, cartTotal, clearCart } = useStore();
+  const { cart, cartTotal, placeOrder, currentUser } = useStore();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
+  const [transactionId, setTransactionId] = useState('');
+  const [customerData, setCustomerData] = useState({
+    firstName: currentUser?.name.split(' ')[0] || '',
+    lastName: currentUser?.name.split(' ').slice(1).join(' ') || '',
+    email: currentUser?.email || '',
+    address: '',
+    city: '',
+    zipCode: ''
+  });
 
   if (cart.length === 0 && step !== 3) {
     return (
@@ -22,12 +34,22 @@ export default function Checkout() {
   }
 
   const handlePayment = () => {
+    if (paymentMethod !== 'cod' && paymentMethod !== 'card' && !transactionId) {
+      toast.error('Please enter Transaction ID');
+      return;
+    }
+
     setIsProcessing(true);
     // Mock payment delay
     setTimeout(() => {
       setIsProcessing(false);
+      const paymentData = {
+        method: paymentMethod,
+        transactionId: transactionId || undefined,
+        status: paymentMethod === 'cod' ? 'pending' : 'paid'
+      };
+      placeOrder(customerData, paymentData);
       setStep(3);
-      clearCart();
       toast.success('Order placed successfully!');
     }, 2000);
   };
@@ -57,12 +79,48 @@ export default function Checkout() {
                 Shipping Details
               </h2>
               <div className="grid grid-cols-2 gap-4">
-                <input type="text" placeholder="First Name" className="glass px-6 py-3 rounded-xl focus:outline-none focus:border-primary" />
-                <input type="text" placeholder="Last Name" className="glass px-6 py-3 rounded-xl focus:outline-none focus:border-primary" />
-                <input type="email" placeholder="Email Address" className="col-span-2 glass px-6 py-3 rounded-xl focus:outline-none focus:border-primary" />
-                <input type="text" placeholder="Address" className="col-span-2 glass px-6 py-3 rounded-xl focus:outline-none focus:border-primary" />
-                <input type="text" placeholder="City" className="glass px-6 py-3 rounded-xl focus:outline-none focus:border-primary" />
-                <input type="text" placeholder="ZIP Code" className="glass px-6 py-3 rounded-xl focus:outline-none focus:border-primary" />
+                <input 
+                  type="text" 
+                  placeholder="First Name" 
+                  value={customerData.firstName}
+                  onChange={e => setCustomerData({...customerData, firstName: e.target.value})}
+                  className="glass px-6 py-3 rounded-xl focus:outline-none focus:border-primary" 
+                />
+                <input 
+                  type="text" 
+                  placeholder="Last Name" 
+                  value={customerData.lastName}
+                  onChange={e => setCustomerData({...customerData, lastName: e.target.value})}
+                  className="glass px-6 py-3 rounded-xl focus:outline-none focus:border-primary" 
+                />
+                <input 
+                  type="email" 
+                  placeholder="Email Address" 
+                  value={customerData.email}
+                  onChange={e => setCustomerData({...customerData, email: e.target.value})}
+                  className="col-span-2 glass px-6 py-3 rounded-xl focus:outline-none focus:border-primary" 
+                />
+                <input 
+                  type="text" 
+                  placeholder="Address" 
+                  value={customerData.address}
+                  onChange={e => setCustomerData({...customerData, address: e.target.value})}
+                  className="col-span-2 glass px-6 py-3 rounded-xl focus:outline-none focus:border-primary" 
+                />
+                <input 
+                  type="text" 
+                  placeholder="City" 
+                  value={customerData.city}
+                  onChange={e => setCustomerData({...customerData, city: e.target.value})}
+                  className="glass px-6 py-3 rounded-xl focus:outline-none focus:border-primary" 
+                />
+                <input 
+                  type="text" 
+                  placeholder="ZIP Code" 
+                  value={customerData.zipCode}
+                  onChange={e => setCustomerData({...customerData, zipCode: e.target.value})}
+                  className="glass px-6 py-3 rounded-xl focus:outline-none focus:border-primary" 
+                />
               </div>
               <button onClick={() => setStep(2)} className="btn-primary w-full py-4 flex items-center justify-center gap-2">
                 Continue to Payment
@@ -72,46 +130,134 @@ export default function Checkout() {
           )}
 
           {step === 2 && (
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="glass-card p-8 space-y-6">
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="glass-card p-8 space-y-8">
               <h2 className="text-2xl font-display font-bold flex items-center gap-2">
                 <CreditCard className="w-6 h-6 text-primary" />
-                Payment Method
+                Select Payment Method
               </h2>
-              <div className="space-y-4">
-                <div className="glass p-6 rounded-2xl border-primary/50 bg-primary/5 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-8 bg-white/10 rounded flex items-center justify-center text-[10px] font-bold">VISA</div>
-                    <div>
-                      <p className="font-medium">•••• •••• •••• 4242</p>
-                      <p className="text-xs text-white/40">Expires 12/28</p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { id: 'cod', label: 'Cash on Delivery', icon: Banknote },
+                  { id: 'bkash', label: 'bKash', icon: Smartphone, color: 'text-[#D12053]' },
+                  { id: 'nagad', label: 'Nagad', icon: Smartphone, color: 'text-[#F7941D]' },
+                  { id: 'rocket', label: 'Rocket', icon: Smartphone, color: 'text-[#8C3494]' },
+                  { id: 'card', label: 'Debit/Credit Card', icon: CreditCard },
+                ].map((method) => (
+                  <button
+                    key={method.id}
+                    onClick={() => setPaymentMethod(method.id as PaymentMethod)}
+                    className={`p-4 rounded-2xl border transition-all flex items-center gap-4 text-left ${
+                      paymentMethod === method.id 
+                        ? 'border-primary bg-primary/10' 
+                        : 'border-white/10 hover:border-white/20 bg-white/5'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-lg bg-white/5 ${method.color || 'text-primary'}`}>
+                      <method.icon className="w-5 h-5" />
                     </div>
-                  </div>
-                  <div className="w-5 h-5 rounded-full border-4 border-primary" />
-                </div>
-                <button className="btn-outline w-full py-4 text-sm">+ Add New Card</button>
+                    <div>
+                      <p className="font-bold text-sm">{method.label}</p>
+                      <p className="text-[10px] opacity-40 uppercase tracking-widest">
+                        {method.id === 'cod' ? 'Pay when you receive' : 'Instant Payment'}
+                      </p>
+                    </div>
+                    {paymentMethod === method.id && (
+                      <div className="ml-auto w-4 h-4 rounded-full border-4 border-primary" />
+                    )}
+                  </button>
+                ))}
               </div>
-              <button 
-                onClick={handlePayment} 
-                disabled={isProcessing}
-                className="btn-primary w-full py-4 flex items-center justify-center gap-2"
-              >
-                {isProcessing ? 'Processing...' : `Pay ${formatPrice(cartTotal)}`}
-              </button>
-              <button onClick={() => setStep(1)} className="w-full text-center text-sm text-white/40 hover:text-white transition-colors">Back to Shipping</button>
+
+              {paymentMethod !== 'cod' && paymentMethod !== 'card' && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4 p-6 rounded-2xl bg-primary/5 border border-primary/20"
+                >
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-widest opacity-60">Payment Instructions</p>
+                    <p className="text-sm opacity-80">
+                      Please send <span className="text-primary font-bold">{formatPrice(cartTotal)}</span> to our {paymentMethod} merchant number: <span className="text-primary font-bold">017XXXXXXXX</span> and enter the Transaction ID below.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest opacity-40">Transaction ID</label>
+                    <input 
+                      type="text" 
+                      placeholder="Enter TrxID" 
+                      value={transactionId}
+                      onChange={e => setTransactionId(e.target.value)}
+                      className="w-full glass px-6 py-3 rounded-xl focus:outline-none focus:border-primary text-sm font-mono"
+                    />
+                  </div>
+                </motion.div>
+              )}
+
+              {paymentMethod === 'card' && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4 p-6 rounded-2xl bg-primary/5 border border-primary/20"
+                >
+                  <div className="grid grid-cols-2 gap-4">
+                    <input type="text" placeholder="Card Number" className="col-span-2 glass px-6 py-3 rounded-xl focus:outline-none focus:border-primary text-sm" />
+                    <input type="text" placeholder="MM/YY" className="glass px-6 py-3 rounded-xl focus:outline-none focus:border-primary text-sm" />
+                    <input type="text" placeholder="CVC" className="glass px-6 py-3 rounded-xl focus:outline-none focus:border-primary text-sm" />
+                  </div>
+                </motion.div>
+              )}
+
+              <div className="space-y-4 pt-4">
+                <button 
+                  onClick={handlePayment} 
+                  disabled={isProcessing}
+                  className="btn-primary w-full py-5 text-lg flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(0,255,0,0.2)]"
+                >
+                  {isProcessing ? (
+                    <motion.div 
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                      className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full"
+                    />
+                  ) : (
+                    <>
+                      Confirm Order
+                      <CheckCircle2 className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
+                <button onClick={() => setStep(1)} className="w-full text-center text-xs font-bold uppercase tracking-widest text-white/30 hover:text-white transition-colors">
+                  Back to Shipping
+                </button>
+              </div>
             </motion.div>
           )}
 
           {step === 3 && (
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass-card p-12 text-center space-y-6">
-              <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass-card p-12 text-center space-y-8">
+              <div className="relative">
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', damping: 12, stiffness: 200 }}
+                  className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-[0_0_40px_rgba(16,185,129,0.3)]"
+                >
+                  <CheckCircle2 className="w-12 h-12 text-white" />
+                </motion.div>
+                <motion.div 
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                  className="absolute inset-0 bg-emerald-500 rounded-full -z-10"
+                />
               </div>
-              <div className="space-y-2">
-                <h2 className="text-3xl font-display font-bold">Order Confirmed!</h2>
-                <p className="text-white/50">Your futuristic gear is on its way. Check your email for details.</p>
+              <div className="space-y-4">
+                <h2 className="text-4xl font-display font-bold">Thank You!</h2>
+                <p className="text-white/50 max-w-sm mx-auto">Your futuristic gear is on its way. We've received your order and are processing it now.</p>
               </div>
-              <div className="pt-6">
-                <button onClick={() => navigate('/')} className="btn-primary">Return Home</button>
+              <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
+                <button onClick={() => navigate('/profile')} className="btn-outline px-8 py-4">View Order</button>
+                <button onClick={() => navigate('/')} className="btn-primary px-8 py-4">Return Home</button>
               </div>
             </motion.div>
           )}

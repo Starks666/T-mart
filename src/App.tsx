@@ -5,11 +5,15 @@ import { Toaster } from 'react-hot-toast';
 import Navbar from './components/Navbar';
 import TopBanner from './components/TopBanner';
 import CartDrawer from './components/CartDrawer';
+import FloatingCart from './components/FloatingCart';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
 import ProductDetails from './pages/ProductDetails';
 import Checkout from './pages/Checkout';
 import Admin from './pages/Admin';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Profile from './pages/Profile';
 import { motion } from 'motion/react';
 import { Anchor } from 'lucide-react';
 
@@ -34,6 +38,7 @@ export default function App() {
           <TopBanner />
           <Navbar />
           <CartDrawer />
+          <FloatingCart />
           
           <main className="flex-1">
             <Routes>
@@ -42,13 +47,9 @@ export default function App() {
               <Route path="/product/:id" element={<ProductDetails />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/admin" element={<Admin />} />
-              {/* Placeholder routes for remaining features */}
-              <Route path="/profile" element={
-                <div className="pt-40 text-center">
-                  <h1 className="text-4xl font-display font-bold mb-4">User Profile</h1>
-                  <p className="text-white/50">Mock authentication system coming soon.</p>
-                </div>
-              } />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="/about" element={
                 <div className="pt-40 text-center flex flex-col items-center">
                   <h1 className="text-4xl font-display font-bold mb-4 flex items-center gap-3 text-red-600">

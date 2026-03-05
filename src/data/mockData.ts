@@ -24,7 +24,43 @@ export const PRODUCTS: Product[] = [
       'Connectivity': 'Bluetooth 5.3',
       'Water Resistance': 'IPX7',
       'Weight': '5.4g per bud'
-    }
+    },
+    productReviews: [
+      {
+        id: 'rev-1',
+        userId: 'user-1',
+        userName: 'Sarah Jenkins',
+        rating: 5,
+        comment: 'Absolutely incredible sound quality! The noise cancellation is the best I have ever experienced.',
+        createdAt: '2026-02-15T10:00:00Z'
+      },
+      {
+        id: 'rev-2',
+        userId: 'user-2',
+        userName: 'Michael Chen',
+        rating: 4,
+        comment: 'Great battery life and very comfortable for long sessions. The bass is a bit punchy but clear.',
+        createdAt: '2026-02-20T14:30:00Z'
+      }
+    ],
+    questions: [
+      {
+        id: 'q-1',
+        userId: 'user-3',
+        userName: 'David Miller',
+        text: 'Does it support multi-point connection?',
+        answer: 'Yes, the Aether Pods Pro support simultaneous connection to two devices.',
+        createdAt: '2026-02-10T09:00:00Z'
+      },
+      {
+        id: 'q-2',
+        userId: 'user-4',
+        userName: 'Emily Rose',
+        text: 'How long does it take to fully charge the case?',
+        answer: 'It takes approximately 1.5 hours to fully charge the case via USB-C.',
+        createdAt: '2026-02-25T16:45:00Z'
+      }
+    ]
   },
   {
     id: '2',

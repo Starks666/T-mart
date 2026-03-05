@@ -20,22 +20,20 @@ export default function ProductCard({ product }: ProductCardProps) {
       className="glass-card group flex flex-col h-full overflow-hidden"
     >
       <div className="relative aspect-[4/5] overflow-hidden">
-        <img 
-          src={product.image} 
-          alt={product.name} 
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          referrerPolicy="no-referrer"
-        />
-        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
-          <Link 
-            to={`/product/${product.id}`}
-            className="p-3 bg-bg-base rounded-full hover:bg-primary hover:text-white transition-all duration-300 shadow-lg"
-          >
-            <Eye className="w-5 h-5" />
-          </Link>
+        <Link to={`/product/${product.id}`} className="block w-full h-full">
+          {product.image && (
+            <img 
+              src={product.image} 
+              alt={product.name} 
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              referrerPolicy="no-referrer"
+            />
+          )}
+        </Link>
+        <div className="absolute bottom-4 right-4 translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
           <button 
             onClick={() => addToCart(product)}
-            className="p-3 bg-bg-base rounded-full hover:bg-primary hover:text-white transition-all duration-300 shadow-lg"
+            className="p-3 bg-primary text-white rounded-full hover:bg-primary-dark transition-all duration-300 shadow-lg"
           >
             <ShoppingCart className="w-5 h-5" />
           </button>
@@ -62,7 +60,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             onClick={() => addToCart(product)}
             className="text-[10px] font-bold uppercase tracking-widest text-primary border-b border-primary hover:opacity-60 transition-opacity"
           >
-            Add to Bag
+            Add to Cart
           </button>
         </div>
       </div>
