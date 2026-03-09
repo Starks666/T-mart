@@ -45,17 +45,17 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
       </div>
 
-      <div className="p-6 flex-1 flex flex-col">
+      <div className="p-4 md:p-6 flex-1 flex flex-col">
         <Link to={`/product/${product.id}`} className="group/title">
-          <h3 className="text-lg font-display font-semibold mb-1 group-hover/title:text-primary transition-colors">
+          <h3 className="text-base md:text-lg font-display font-semibold mb-1 group-hover/title:text-primary transition-colors">
             {product.name}
           </h3>
         </Link>
-        <p className="text-sm opacity-40 line-clamp-2 mb-4 flex-1">
+        <p className="text-xs md:text-sm opacity-40 line-clamp-2 mb-4 flex-1">
           {product.description}
         </p>
         <div className="flex items-center justify-between mt-auto">
-          <span className="text-lg font-bold">{formatPrice(product.price)}</span>
+          <span className="text-base md:text-lg font-bold">{formatPrice(product.price)}</span>
           <button 
             onClick={() => addToCart(product)}
             className="text-[10px] font-bold uppercase tracking-widest text-primary border-b border-primary hover:opacity-60 transition-opacity"

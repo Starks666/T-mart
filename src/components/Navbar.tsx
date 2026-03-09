@@ -10,6 +10,7 @@ export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const userNotifications = notifications.filter(n => n.userId === currentUser?.id);
   const unreadCount = userNotifications.filter(n => !n.isRead).length;
@@ -20,47 +21,59 @@ export default function Navbar() {
     navigate(notification.link);
   };
 
+  const menuItems = [
+    { label: 'Home', path: '/' },
+    { label: 'My Profile', path: currentUser ? '/profile' : '/login' },
+    { label: 'Shop', path: '/shop' },
+    { label: 'Categories', path: '/categories' },
+    { label: 'About', path: '/about' },
+  ];
+
+  if (currentUser?.role === 'admin') {
+    menuItems.push({ label: 'Admin', path: '/admin' });
+  }
+
   return (
     <motion.nav 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       className="fixed top-10 left-0 right-0 z-40 px-6 py-4"
     >
-      <div className="max-w-7xl mx-auto glass rounded-full px-8 py-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <Anchor className="w-6 h-6 text-primary" />
-          <span className="text-2xl font-display font-bold tracking-tight text-primary">T mart</span>
+      <div className="max-w-7xl mx-auto glass rounded-full px-4 md:px-6 py-2 md:py-3 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-1.5 md:gap-2 shrink-0">
+          <Anchor className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+          <span className="text-lg md:text-xl font-display font-bold tracking-tight text-primary whitespace-nowrap">T mart</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium opacity-70">
+        <div className="hidden md:flex items-center gap-6 text-sm font-medium opacity-70">
           <Link to="/" className="hover:opacity-100 transition-opacity">Home</Link>
           <Link to="/shop" className="hover:opacity-100 transition-opacity">Shop</Link>
           <Link to="/categories" className="hover:opacity-100 transition-opacity">Categories</Link>
           <Link to="/about" className="hover:opacity-100 transition-opacity">About</Link>
         </div>
 
-        <div className="flex items-center gap-4">
-          <button className="p-2 hover:bg-primary/10 rounded-full transition-colors hidden sm:block">
-            <Search className="w-5 h-5" />
+        <div className="flex items-center gap-2 md:gap-4">
+          <button className="p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors">
+            <Search className="w-4 h-4 md:w-5 md:h-5" />
           </button>
           
           <button 
             onClick={toggleTheme}
-            className="p-2 hover:bg-primary/10 rounded-full transition-colors"
+            className="p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors"
             title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
           >
-            {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5 text-primary" />}
+            {theme === 'light' ? <Moon className="w-4 h-4 md:w-5 md:h-5" /> : <Sun className="w-4 h-4 md:w-5 md:h-5 text-primary" />}
           </button>
 
           {currentUser && (
             <div className="relative">
               <button 
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className="p-2 hover:bg-primary/10 rounded-full transition-colors relative"
+                className="p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors relative"
               >
-                <Bell className="w-5 h-5" />
+                <Bell className="w-4 h-4 md:w-5 md:h-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-[8px] font-bold flex items-center justify-center rounded-full border-2 border-bg-base text-white">
+                  <span className="absolute top-0 right-0 w-3 h-3 md:w-4 md:h-4 bg-red-500 text-[6px] md:text-[8px] font-bold flex items-center justify-center rounded-full border-2 border-bg-base text-white">
                     {unreadCount}
                   </span>
                 )}
@@ -117,35 +130,78 @@ export default function Navbar() {
             </div>
           )}
 
-          <Link to={currentUser ? "/profile" : "/login"} className="flex items-center gap-2 p-1.5 hover:bg-primary/10 rounded-full transition-colors hidden sm:flex">
+          <Link to={currentUser ? "/profile" : "/login"} className="hidden sm:flex items-center gap-1 md:gap-2 p-1 md:p-1.5 hover:bg-primary/10 rounded-full transition-colors">
             {currentUser?.avatar ? (
-              <img src={currentUser.avatar} alt="" className="w-7 h-7 rounded-full object-cover border border-primary/20" />
+              <img src={currentUser.avatar} alt="" className="w-6 h-6 md:w-7 md:h-7 rounded-full object-cover border border-primary/20" />
             ) : (
-              <User className="w-5 h-5 ml-1.5" />
+              <User className="w-4 h-4 md:w-5 md:h-5 ml-1 md:ml-1.5" />
             )}
-            <span className="text-xs font-bold pr-2 ml-1">
-              {currentUser ? currentUser.name.split(' ')[0] : 'Login / Sign up'}
+            <span className="text-[10px] md:text-xs font-bold pr-1 md:pr-2 ml-0.5 md:ml-1">
+              {currentUser ? currentUser.name.split(' ')[0] : 'Login'}
             </span>
           </Link>
           
-          <button 
+          <motion.button 
+            key={cartCount}
+            animate={cartCount > 0 ? { scale: [1, 1.2, 1] } : {}}
+            transition={{ duration: 0.3 }}
             onClick={() => setIsCartOpen(true)}
-            className="relative p-2 hover:bg-primary/10 rounded-full transition-colors"
+            className="relative p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors"
           >
-            <ShoppingCart className="w-5 h-5" />
+            <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
             {cartCount > 0 && (
               <motion.span 
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute top-0 right-0 w-5 h-5 bg-primary text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-bg-base text-white"
+                className="absolute top-0 right-0 w-4 h-4 md:w-5 md:h-5 bg-primary text-[8px] md:text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-bg-base text-white"
               >
                 {cartCount}
               </motion.span>
             )}
-          </button>
-          <button className="md:hidden p-2 hover:bg-primary/10 rounded-full transition-colors">
-            <Menu className="w-5 h-5" />
-          </button>
+          </motion.button>
+          
+          <div className="relative md:hidden">
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-1.5 hover:bg-primary/10 rounded-full transition-colors"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+
+            <AnimatePresence>
+              {isMenuOpen && (
+                <>
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="fixed inset-0 z-[-1] bg-black/5 backdrop-blur-sm"
+                  />
+                  <motion.div 
+                    initial={{ opacity: 0, x: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: 20, scale: 0.95 }}
+                    className="absolute right-0 mt-4 w-56 glass p-3 shadow-2xl z-50 overflow-hidden rounded-3xl border border-primary/20"
+                  >
+                    <div className="flex flex-col gap-1">
+                      {menuItems.map((item) => (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          onClick={() => setIsMenuOpen(false)}
+                          className="px-4 py-3 rounded-2xl text-sm font-bold uppercase tracking-widest hover:bg-primary/10 transition-colors flex items-center justify-between group"
+                        >
+                          <span className="group-hover:text-primary transition-colors">{item.label}</span>
+                          <Anchor className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0 text-primary" />
+                        </Link>
+                      ))}
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </motion.nav>

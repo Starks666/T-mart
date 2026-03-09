@@ -33,25 +33,34 @@ export default function Checkout() {
     );
   }
 
-  const handlePayment = () => {
+  const isShippingValid = 
+    customerData.firstName.trim() !== '' &&
+    customerData.lastName.trim() !== '' &&
+    customerData.email.trim() !== '' &&
+    customerData.address.trim() !== '' &&
+    customerData.city.trim() !== '' &&
+    customerData.zipCode.trim() !== '';
+
+  const handlePayment = async () => {
     if (paymentMethod !== 'cod' && paymentMethod !== 'card' && !transactionId) {
       toast.error('Please enter Transaction ID');
       return;
     }
 
     setIsProcessing(true);
-    // Mock payment delay
-    setTimeout(() => {
-      setIsProcessing(false);
+    try {
       const paymentData = {
         method: paymentMethod,
         transactionId: transactionId || undefined,
         status: paymentMethod === 'cod' ? 'pending' : 'paid'
       };
-      placeOrder(customerData, paymentData);
+      await placeOrder(customerData, paymentData);
       setStep(3);
-      toast.success('Order placed successfully!');
-    }, 2000);
+    } catch (error) {
+      toast.error('Failed to place order');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -122,7 +131,11 @@ export default function Checkout() {
                   className="glass px-6 py-3 rounded-xl focus:outline-none focus:border-primary" 
                 />
               </div>
-              <button onClick={() => setStep(2)} className="btn-primary w-full py-4 flex items-center justify-center gap-2">
+              <button 
+                onClick={() => setStep(2)} 
+                disabled={!isShippingValid}
+                className={`btn-primary w-full py-4 flex items-center justify-center gap-2 transition-all ${!isShippingValid ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
+              >
                 Continue to Payment
                 <ArrowRight className="w-5 h-5" />
               </button>
@@ -235,15 +248,15 @@ export default function Checkout() {
           )}
 
           {step === 3 && (
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass-card p-12 text-center space-y-8">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass-card p-6 md:p-12 text-center space-y-6 md:space-y-8">
               <div className="relative">
                 <motion.div 
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', damping: 12, stiffness: 200 }}
-                  className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-[0_0_40px_rgba(16,185,129,0.3)]"
+                  className="w-16 h-16 md:w-24 md:h-24 bg-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-[0_0_40px_rgba(16,185,129,0.3)]"
                 >
-                  <CheckCircle2 className="w-12 h-12 text-white" />
+                  <CheckCircle2 className="w-8 h-8 md:w-12 md:h-12 text-white" />
                 </motion.div>
                 <motion.div 
                   animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
@@ -251,13 +264,13 @@ export default function Checkout() {
                   className="absolute inset-0 bg-emerald-500 rounded-full -z-10"
                 />
               </div>
-              <div className="space-y-4">
-                <h2 className="text-4xl font-display font-bold">Thank You!</h2>
-                <p className="text-white/50 max-w-sm mx-auto">Your futuristic gear is on its way. We've received your order and are processing it now.</p>
+              <div className="space-y-3 md:space-y-4">
+                <h2 className="text-3xl md:text-4xl font-display font-bold">Thank You!</h2>
+                <p className="text-white/50 text-sm md:text-base max-w-sm mx-auto">Your futuristic gear is on its way. We've received your order and are processing it now.</p>
               </div>
-              <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
-                <button onClick={() => navigate('/profile')} className="btn-outline px-8 py-4">View Order</button>
-                <button onClick={() => navigate('/')} className="btn-primary px-8 py-4">Return Home</button>
+              <div className="pt-4 flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
+                <button onClick={() => navigate('/profile')} className="btn-outline px-6 md:px-8 py-3 md:py-4 text-sm md:text-base">View Order</button>
+                <button onClick={() => navigate('/')} className="btn-primary px-6 md:px-8 py-3 md:py-4 text-sm md:text-base">Return Home</button>
               </div>
             </motion.div>
           )}

@@ -12,8 +12,9 @@ export default function FloatingCart() {
     <AnimatePresence>
       {cartCount > 0 && (
         <motion.button
+          key={cartCount}
           initial={{ scale: 0, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
+          animate={{ scale: 1, opacity: 1, y: 0, transition: { scale: { type: "spring", stiffness: 300, damping: 10 } } }}
           exit={{ scale: 0, opacity: 0, y: 20 }}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}

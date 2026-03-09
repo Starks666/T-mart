@@ -45,8 +45,8 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-6">
         <div className="glass-card p-12 md:p-20 relative overflow-hidden text-center border border-black/5">
           <div className="relative z-10 space-y-8">
-            <h2 className="text-4xl md:text-5xl font-display font-bold flex items-center justify-center gap-3">
-              Join the <span className="text-red-600 flex items-center gap-2"><Anchor className="w-10 h-10" /> T mart</span> Community
+            <h2 className="text-lg sm:text-3xl md:text-5xl font-display font-bold flex items-center justify-center gap-2 md:gap-3 whitespace-nowrap">
+              Join the <span className="text-red-600 flex items-center gap-1.5 md:gap-2"><Anchor className="w-5 h-5 md:w-10 md:h-10" /> T mart</span> Community
             </h2>
             <p className="text-black/60 max-w-xl mx-auto">
               Get updates on new arrivals, exclusive offers, and minimalist living tips.

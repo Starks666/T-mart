@@ -55,12 +55,12 @@
 
 @utility glass-card {
   background-color: var(--card-base);
-  border-radius: 1rem;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
   &:hover {
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
     transform: translateY(-4px);
   }
 }
@@ -73,7 +73,7 @@
 @utility btn-primary {
   position: relative;
   padding: 0.75rem 2rem;
-  border-radius: 0.5rem;
+  border-radius: 1rem;
   font-weight: 500;
   transition: all 0.3s;
   background-color: var(--primary);
@@ -92,7 +92,7 @@
 
 @utility btn-outline {
   padding: 0.75rem 2rem;
-  border-radius: 0.5rem;
+  border-radius: 1rem;
   font-weight: 500;
   border: 1px solid var(--primary);
   color: var(--primary);

@@ -37,12 +37,12 @@ export default function Profile() {
     );
   }
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        updateCurrentUser({ avatar: reader.result as string });
+      reader.onloadend = async () => {
+        await updateCurrentUser({ avatar: reader.result as string });
       };
       reader.readAsDataURL(file);
     }
@@ -112,8 +112,8 @@ export default function Profile() {
             </div>
           </div>
           <button 
-            onClick={() => {
-              logout();
+            onClick={async () => {
+              await logout();
               navigate('/');
             }}
             className="flex items-center gap-2 text-red-500 font-bold hover:text-red-400 transition-colors"
@@ -254,61 +254,48 @@ export default function Profile() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-2xl bg-card-base border border-primary/20 rounded-[2.5rem] overflow-hidden shadow-2xl"
+              className="relative w-full max-w-2xl bg-card-base border border-primary/20 rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-2xl mx-auto"
             >
-              <div className="p-8 border-b border-primary/10 flex justify-between items-center">
+              <div className="p-4 md:p-8 border-b border-primary/10 flex justify-between items-center">
                 <div>
-                  <h2 className="text-2xl font-display font-bold">Order Details</h2>
-                  <p className="text-xs opacity-40 font-bold uppercase tracking-widest mt-1">{selectedOrder.id}</p>
+                  <h2 className="text-xl md:text-2xl font-display font-bold">Order Details</h2>
+                  <p className="text-[10px] opacity-40 font-bold uppercase tracking-widest mt-1">{selectedOrder.id}</p>
                 </div>
                 <button 
                   onClick={() => setSelectedOrder(null)}
                   className="p-2 hover:bg-white/5 rounded-full transition-colors"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5 md:w-6 md:h-6" />
                 </button>
               </div>
 
-              <div className="p-8 max-h-[70vh] overflow-y-auto space-y-8 custom-scrollbar">
+              <div className="p-4 md:p-8 max-h-[70vh] overflow-y-auto space-y-6 md:space-y-8 custom-scrollbar">
                 {/* Status Chart */}
                 {selectedOrder.status !== 'rejected' && selectedOrder.status !== 'cancelled' && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-[10px] font-bold uppercase tracking-widest opacity-30">Order Status Timeline</h4>
-                      {selectedOrder.status === 'pending' && (
-                        <button 
-                          onClick={() => {
-                            if (window.confirm('Are you sure you want to cancel this order?')) {
-                              cancelOrder(selectedOrder.id);
-                              setSelectedOrder(null);
-                            }
-                          }}
-                          className="text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-300 transition-colors"
-                        >
-                          Cancel Order
-                        </button>
-                      )}
+                      <h4 className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest opacity-30">Order Status Timeline</h4>
                     </div>
-                    <div className="h-40 w-full bg-white/5 rounded-3xl p-4 border border-primary/10">
+                    <div className="h-32 md:h-40 w-full bg-white/5 rounded-2xl md:rounded-3xl p-4 border border-primary/10">
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={getStatusData(selectedOrder.status)}>
                           <XAxis 
                             dataKey="name" 
                             axisLine={false} 
                             tickLine={false} 
-                            tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.3)' }}
+                            tick={{ fontSize: 8, fill: 'rgba(255,255,255,0.3)' }}
                           />
                           <Tooltip 
                             contentStyle={{ backgroundColor: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                            itemStyle={{ color: '#00FF00', fontSize: '12px' }}
+                            itemStyle={{ color: '#00FF00', fontSize: '10px' }}
                           />
                           <Line 
                             type="monotone" 
                             dataKey="value" 
                             stroke="#00FF00" 
-                            strokeWidth={3} 
-                            dot={{ r: 4, fill: '#00FF00', strokeWidth: 0 }}
-                            activeDot={{ r: 6, fill: '#00FF00' }}
+                            strokeWidth={2} 
+                            dot={{ r: 3, fill: '#00FF00', strokeWidth: 0 }}
+                            activeDot={{ r: 5, fill: '#00FF00' }}
                           />
                         </LineChart>
                       </ResponsiveContainer>
@@ -317,13 +304,13 @@ export default function Profile() {
                 )}
 
                 {(selectedOrder.status === 'rejected' || selectedOrder.status === 'cancelled') && (
-                  <div className={`p-6 rounded-3xl ${selectedOrder.status === 'rejected' ? 'bg-red-500/10 border-red-500/20' : 'bg-white/5 border-white/10'} border flex items-center gap-4`}>
-                    <AlertCircle className={`w-8 h-8 ${selectedOrder.status === 'rejected' ? 'text-red-500' : 'text-white/30'} flex-shrink-0`} />
+                  <div className={`p-4 md:p-6 rounded-2xl md:rounded-3xl ${selectedOrder.status === 'rejected' ? 'bg-red-500/10 border-red-500/20' : 'bg-white/5 border-white/10'} border flex items-center gap-3 md:gap-4`}>
+                    <AlertCircle className={`w-6 h-6 md:w-8 md:h-8 ${selectedOrder.status === 'rejected' ? 'text-red-500' : 'text-white/30'} flex-shrink-0`} />
                     <div className="flex-1">
-                      <p className={`font-bold ${selectedOrder.status === 'rejected' ? 'text-red-500' : 'text-white'}`}>
+                      <p className={`text-sm md:text-base font-bold ${selectedOrder.status === 'rejected' ? 'text-red-500' : 'text-white'}`}>
                         {selectedOrder.status === 'rejected' ? 'Sorry, Out of Stock' : 'Order Cancelled'}
                       </p>
-                      <p className="text-sm opacity-60">
+                      <p className="text-[10px] md:text-sm opacity-60">
                         {selectedOrder.status === 'rejected' 
                           ? "We couldn't fulfill this order. You are eligible for a full refund."
                           : "You have cancelled this order. You can request a refund if payment was made."}
@@ -332,75 +319,75 @@ export default function Profile() {
                     {!selectedOrder.refundRequest && (
                       <button 
                         onClick={() => setShowRefundForm(true)}
-                        className="bg-primary text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-primary-dark transition-colors"
+                        className="bg-primary text-white px-3 md:px-6 py-1.5 md:py-2 rounded-lg md:rounded-xl font-bold text-[10px] md:text-sm hover:bg-primary-dark transition-colors"
                       >
-                        Request Refund
+                        Refund
                       </button>
                     )}
                   </div>
                 )}
 
                 {selectedOrder.refundRequest && (
-                  <div className="p-6 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-4">
-                    <CreditCard className="w-8 h-8 text-emerald-500 flex-shrink-0" />
+                  <div className="p-4 md:p-6 rounded-2xl md:rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3 md:gap-4">
+                    <CreditCard className="w-6 h-6 md:w-8 md:h-8 text-emerald-500 flex-shrink-0" />
                     <div className="flex-1">
-                      <p className="font-bold text-emerald-400">Refund Requested</p>
-                      <p className="text-sm opacity-60">Status: {selectedOrder.refundRequest.status}</p>
+                      <p className="text-sm md:text-base font-bold text-emerald-400">Refund Requested</p>
+                      <p className="text-[10px] md:text-sm opacity-60">Status: {selectedOrder.refundRequest.status}</p>
                     </div>
                   </div>
                 )}
 
-                <div className="space-y-6">
+                <div className="space-y-4 md:space-y-6">
                   {selectedOrder.items.map((item, idx) => (
-                    <div key={idx} className="flex gap-6">
-                      <div className="w-24 h-24 rounded-2xl overflow-hidden border border-primary/10 bg-white/5 flex-shrink-0">
+                    <div key={idx} className="flex gap-4 md:gap-6">
+                      <div className="w-16 h-16 md:w-24 md:h-24 rounded-xl md:rounded-2xl overflow-hidden border border-primary/10 bg-white/5 flex-shrink-0">
                         {item.image && (
                           <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                         )}
                       </div>
-                      <div className="flex-1 space-y-2">
-                        <div className="flex justify-between">
-                          <h4 className="font-bold">{item.name}</h4>
-                          <p className="font-bold text-primary">{formatPrice(item.price)}</p>
+                      <div className="flex-1 space-y-1 md:space-y-2">
+                        <div className="flex justify-between items-start">
+                          <h4 className="text-sm md:text-base font-bold">{item.name}</h4>
+                          <p className="text-sm md:text-base font-bold text-primary">{formatPrice(item.price)}</p>
                         </div>
-                        <p className="text-xs opacity-50 leading-relaxed line-clamp-2">{item.description}</p>
-                        <p className="text-xs font-bold uppercase tracking-widest opacity-30">Qty: {item.quantity}</p>
+                        <p className="text-[10px] md:text-xs opacity-50 leading-relaxed line-clamp-2">{item.description}</p>
+                        <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest opacity-30">Qty: {item.quantity}</p>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="pt-8 border-t border-primary/10 grid grid-cols-2 gap-8">
+                <div className="pt-6 md:pt-8 border-t border-primary/10 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                   <div>
-                    <h4 className="text-[10px] font-bold uppercase tracking-widest opacity-30 mb-4">Shipping Address</h4>
-                    <div className="text-sm space-y-1 opacity-70">
+                    <h4 className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest opacity-30 mb-2 md:mb-4">Shipping Address</h4>
+                    <div className="text-xs md:text-sm space-y-1 opacity-70">
                       <p>{selectedOrder.customer.firstName} {selectedOrder.customer.lastName}</p>
                       <p>{selectedOrder.customer.address}</p>
                       <p>{selectedOrder.customer.city}, {selectedOrder.customer.zipCode}</p>
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-[10px] font-bold uppercase tracking-widest opacity-30 mb-4">Order Summary</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
+                    <h4 className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest opacity-30 mb-2 md:mb-4">Order Summary</h4>
+                    <div className="space-y-1.5 md:space-y-2">
+                      <div className="flex justify-between text-xs md:text-sm">
                         <span className="opacity-50">Subtotal</span>
                         <span>{formatPrice(selectedOrder.total)}</span>
                       </div>
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-xs md:text-sm">
                         <span className="opacity-50">Shipping</span>
                         <span className="text-emerald-400">Free</span>
                       </div>
-                      <div className="flex justify-between text-sm pt-2 border-t border-white/5">
-                        <span className="opacity-50 uppercase text-[10px] font-bold">Payment Method</span>
-                        <span className="uppercase text-[10px] font-bold text-primary">{selectedOrder.payment?.method || 'cod'}</span>
+                      <div className="flex justify-between text-xs md:text-sm pt-2 border-t border-white/5">
+                        <span className="opacity-50 uppercase text-[8px] md:text-[10px] font-bold">Payment Method</span>
+                        <span className="uppercase text-[8px] md:text-[10px] font-bold text-primary">{selectedOrder.payment?.method || 'cod'}</span>
                       </div>
                       {selectedOrder.payment?.transactionId && (
-                        <div className="flex justify-between text-sm">
-                          <span className="opacity-50 uppercase text-[10px] font-bold">TrxID</span>
-                          <span className="text-[10px] font-mono opacity-80">{selectedOrder.payment.transactionId}</span>
+                        <div className="flex justify-between text-xs md:text-sm">
+                          <span className="opacity-50 uppercase text-[8px] md:text-[10px] font-bold">TrxID</span>
+                          <span className="text-[8px] md:text-[10px] font-mono opacity-80">{selectedOrder.payment.transactionId}</span>
                         </div>
                       )}
-                      <div className="flex justify-between font-bold text-lg pt-2 border-t border-white/5">
+                      <div className="flex justify-between font-bold text-base md:text-lg pt-2 border-t border-white/5">
                         <span>Total</span>
                         <span className="text-primary">{formatPrice(selectedOrder.total)}</span>
                       </div>
@@ -409,23 +396,43 @@ export default function Profile() {
                 </div>
               </div>
               
-              <div className="p-8 bg-primary/5 border-t border-primary/10 flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${
+              <div className="p-4 md:p-8 bg-primary/5 border-t border-primary/10 flex justify-between items-center">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className={`w-2 h-2 md:w-3 md:h-3 rounded-full ${
                     selectedOrder.status === 'delivered' ? 'bg-emerald-500' :
                     selectedOrder.status === 'shipped' ? 'bg-blue-500' :
                     selectedOrder.status === 'rejected' ? 'bg-red-500' :
                     selectedOrder.status === 'cancelled' ? 'bg-white/20' :
                     'bg-amber-500'
                   } animate-pulse`} />
-                  <span className="text-xs font-bold uppercase tracking-widest">Status: {getStatusLabel(selectedOrder.status)}</span>
+                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Status: {getStatusLabel(selectedOrder.status)}</span>
                 </div>
-                <button 
-                  onClick={() => setSelectedOrder(null)}
-                  className="btn-primary py-3 px-8 text-sm"
-                >
-                  Close
-                </button>
+                  <div className="flex gap-3">
+                  {(selectedOrder.status === 'pending' || selectedOrder.status === 'processing') && (
+                    <button 
+                      onClick={async () => {
+                        if (selectedOrder.payment?.method === 'cod') {
+                          if (window.confirm('Are you sure you want to cancel this order?')) {
+                            await cancelOrder(selectedOrder.id);
+                            setSelectedOrder(null);
+                          }
+                        } else {
+                          // Paid - show refund form
+                          setShowRefundForm(true);
+                        }
+                      }}
+                      className="btn-outline border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white py-2 md:py-3 px-6 md:px-8 text-xs md:text-sm"
+                    >
+                      Cancel Order
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => setSelectedOrder(null)}
+                    className="btn-primary py-2 md:py-3 px-6 md:px-8 text-xs md:text-sm"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>
@@ -447,50 +454,54 @@ export default function Profile() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-md bg-card-base border border-primary/20 rounded-[2.5rem] p-8 space-y-8 shadow-2xl"
+              className="relative w-full max-w-md bg-card-base border border-primary/20 rounded-2xl md:rounded-[2.5rem] p-6 md:p-8 space-y-6 md:space-y-8 shadow-2xl mx-auto"
             >
               <div className="text-center space-y-2">
-                <h3 className="text-2xl font-display font-bold">Refund Request</h3>
-                <p className="text-sm opacity-50">Please provide your details for the refund of {formatPrice(selectedOrder.total)}</p>
+                <h3 className="text-xl md:text-2xl font-display font-bold">Refund Request</h3>
+                <p className="text-xs md:text-sm opacity-50">Please provide your details for the refund of {formatPrice(selectedOrder.total)}</p>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4 md:space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest opacity-30">Reason for Refund</label>
+                  <label className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest opacity-30">Reason for Refund</label>
                   <textarea 
                     value={refundReason}
                     onChange={(e) => setRefundReason(e.target.value)}
                     placeholder="e.g. Order rejected by admin"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm focus:outline-none focus:border-primary h-24 resize-none"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl md:rounded-2xl p-3 md:p-4 text-xs md:text-sm focus:outline-none focus:border-primary h-20 md:h-24 resize-none"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest opacity-30">Bank / Payment Details</label>
+                  <label className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest opacity-30">Bank / Payment Details</label>
                   <input 
                     type="text"
                     value={bankDetails}
                     onChange={(e) => setBankDetails(e.target.value)}
                     placeholder="Account Number, Bank Name, etc."
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm focus:outline-none focus:border-primary"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl md:rounded-2xl p-3 md:p-4 text-xs md:text-sm focus:outline-none focus:border-primary"
                   />
                 </div>
-                <div className="flex gap-4">
+                <div className="flex gap-3 md:gap-4">
                   <button 
                     onClick={() => setShowRefundForm(false)}
-                    className="flex-1 btn-outline py-4"
+                    className="flex-1 btn-outline py-3 md:py-4 text-xs md:text-sm"
                   >
                     Cancel
                   </button>
                   <button 
-                    onClick={() => {
+                    onClick={async () => {
                       if (!refundReason || !bankDetails) return;
-                      requestRefund(selectedOrder.id, { reason: refundReason, bankDetails });
+                      // If order is not cancelled yet, cancel it first
+                      if (selectedOrder.status !== 'cancelled') {
+                        await cancelOrder(selectedOrder.id);
+                      }
+                      await requestRefund(selectedOrder.id, { reason: refundReason, bankDetails });
                       setShowRefundForm(false);
                       setSelectedOrder(null);
                       setRefundReason('');
                       setBankDetails('');
                     }}
-                    className="flex-1 btn-primary py-4"
+                    className="flex-1 btn-primary py-3 md:py-4 text-xs md:text-sm"
                   >
                     Submit
                   </button>
