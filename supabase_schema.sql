@@ -1,88 +1,83 @@
--- SQL Schema for T mart Supabase Backend
-
--- 1. Products Table
+-- Products table
 CREATE TABLE products (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
-  price DECIMAL NOT NULL,
-  category TEXT NOT NULL,
+  price NUMERIC NOT NULL,
   description TEXT,
   image TEXT,
   images TEXT[],
-  stock INTEGER DEFAULT 0,
-  rating DECIMAL DEFAULT 4.5,
+  category TEXT,
+  rating NUMERIC DEFAULT 0,
   reviews INTEGER DEFAULT 0,
+  stock INTEGER DEFAULT 0,
   featured BOOLEAN DEFAULT false,
   specs JSONB,
-  product_reviews JSONB DEFAULT '[]',
-  questions JSONB DEFAULT '[]',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  productReviews JSONB DEFAULT '[]'::jsonb,
+  questions JSONB DEFAULT '[]'::jsonb,
+  createdAt TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 2. Profiles Table (Extends Supabase Auth)
-CREATE TABLE profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  name TEXT,
-  email TEXT UNIQUE,
-  role TEXT DEFAULT 'user',
-  avatar TEXT,
-  joined_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- 3. Orders Table
+-- Orders table
 CREATE TABLE orders (
   id TEXT PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  userId TEXT,
   items JSONB NOT NULL,
-  total DECIMAL NOT NULL,
-  status TEXT DEFAULT 'pending',
+  total NUMERIC NOT NULL,
+  status TEXT NOT NULL,
   customer JSONB NOT NULL,
   payment JSONB NOT NULL,
-  refund_request JSONB,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  refundRequest JSONB,
+  createdAt TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 4. Notifications Table
+-- Profiles table (for users)
+CREATE TABLE profiles (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  password TEXT NOT NULL, -- Note: In a real app, use Supabase Auth and don't store passwords here
+  role TEXT DEFAULT 'user',
+  avatar TEXT,
+  joinedAt TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Notifications table
 CREATE TABLE notifications (
   id TEXT PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  userId TEXT NOT NULL,
   title TEXT NOT NULL,
   message TEXT NOT NULL,
   link TEXT,
-  is_read BOOLEAN DEFAULT false,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  isRead BOOLEAN DEFAULT false,
+  createdAt TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Enable Row Level Security (RLS)
+-- Enable RLS (Row Level Security)
+-- For this demo, we'll allow all access, but in production, you'd restrict this.
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
--- Policies
--- Products: Everyone can read, only admins can write
-CREATE POLICY "Public products are viewable by everyone" ON products FOR SELECT USING (true);
-CREATE POLICY "Only admins can insert products" ON products FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.role = 'admin')
-);
-CREATE POLICY "Only admins can update products" ON products FOR UPDATE USING (
-  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.role = 'admin')
-);
-CREATE POLICY "Only admins can delete products" ON products FOR DELETE USING (
-  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.role = 'admin')
-);
+-- Trigger to ensure only the authorized email can be an admin
+CREATE OR REPLACE FUNCTION check_admin_email()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Replace 'your-admin-email@example.com' with your actual admin email
+  IF NEW.role = 'admin' AND NEW.email != 'your-admin-email@example.com' THEN
+    RAISE EXCEPTION 'Only the authorized administrator email can have the admin role';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
--- Profiles: Users can read/write their own profile
-CREATE POLICY "Users can view their own profile" ON profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Users can update their own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "Public profiles are viewable by everyone" ON profiles FOR SELECT USING (true);
+DROP TRIGGER IF EXISTS ensure_single_admin ON profiles;
+CREATE TRIGGER ensure_single_admin
+BEFORE INSERT OR UPDATE ON profiles
+FOR EACH ROW EXECUTE FUNCTION check_admin_email();
 
--- Orders: Users can view their own orders, admins can view all
-CREATE POLICY "Users can view their own orders" ON orders FOR SELECT USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.role = 'admin'));
-CREATE POLICY "Users can insert their own orders" ON orders FOR INSERT WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
-CREATE POLICY "Admins can update orders" ON orders FOR UPDATE USING (EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.role = 'admin'));
-
--- Notifications: Users can view/update their own notifications
-CREATE POLICY "Users can view their own notifications" ON notifications FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can update their own notifications" ON notifications FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "System can insert notifications" ON notifications FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public access to products" ON products FOR SELECT USING (true);
+CREATE POLICY "Allow all access to products for demo" ON products FOR ALL USING (true);
+CREATE POLICY "Allow all access to orders for demo" ON orders FOR ALL USING (true);
+CREATE POLICY "Allow all access to profiles for demo" ON profiles FOR ALL USING (true);
+CREATE POLICY "Allow all access to notifications for demo" ON notifications FOR ALL USING (true);

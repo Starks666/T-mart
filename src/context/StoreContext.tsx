@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { CartItem, Product, Order, User, Review, Question, Notification } from '../types';
 import { PRODUCTS as INITIAL_PRODUCTS } from '../data/mockData';
-import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
 interface StoreContextType {
@@ -11,196 +10,77 @@ interface StoreContextType {
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, delta: number) => void;
   clearCart: () => void;
-  addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
-  updateProduct: (product: Product) => Promise<void>;
-  deleteProduct: (productId: string) => Promise<void>;
-  addReview: (productId: string, review: Omit<Review, 'id' | 'createdAt'>) => Promise<void>;
-  addQuestion: (productId: string, question: Omit<Question, 'id' | 'createdAt'>) => Promise<void>;
+  addProduct: (product: Omit<Product, 'id'>) => void;
+  updateProduct: (product: Product) => void;
+  deleteProduct: (productId: string) => void;
+  addReview: (productId: string, review: Omit<Review, 'id' | 'createdAt'>) => void;
+  addQuestion: (productId: string, question: Omit<Question, 'id' | 'createdAt'>) => void;
   orders: Order[];
-  placeOrder: (customerData: any, paymentData?: any) => Promise<void>;
+  placeOrder: (customerData: any, paymentData?: any) => void;
   users: User[];
   currentUser: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  signup: (user: Omit<User, 'id' | 'role' | 'joinedAt'>) => Promise<void>;
-  logout: () => Promise<void>;
-  updateCurrentUser: (updates: Partial<User>) => Promise<void>;
-  updateOrderStatus: (orderId: string, status: Order['status']) => Promise<void>;
-  requestRefund: (orderId: string, refundData: { reason: string; bankDetails: string }) => Promise<void>;
-  completeRefund: (orderId: string) => Promise<void>;
-  cancelOrder: (orderId: string) => Promise<void>;
-  answerQuestion: (productId: string, questionId: string, answer: string) => Promise<void>;
+  login: (email: string, password: string) => boolean;
+  signup: (user: Omit<User, 'id' | 'role' | 'joinedAt'>) => void;
+  logout: () => void;
+  updateCurrentUser: (updates: Partial<User>) => void;
+  updateOrderStatus: (orderId: string, status: Order['status']) => void;
+  requestRefund: (orderId: string, refundData: { reason: string; bankDetails: string }) => void;
+  completeRefund: (orderId: string) => void;
+  cancelOrder: (orderId: string) => void;
+  answerQuestion: (productId: string, questionId: string, answer: string) => void;
   notifications: Notification[];
-  markNotificationAsRead: (notificationId: string) => Promise<void>;
-  isLoading: boolean;
+  markNotificationAsRead: (notificationId: string) => void;
   cartTotal: number;
   cartCount: number;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
+  isAdmin: boolean;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Product[]>(() => {
+    const saved = localStorage.getItem('tmart_products');
+    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+  });
+  const [orders, setOrders] = useState<Order[]>(() => {
+    const saved = localStorage.getItem('tmart_orders');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [users, setUsers] = useState<User[]>([]);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [users, setUsers] = useState<User[]>(() => {
+    const saved = localStorage.getItem('tmart_users');
+    return saved ? JSON.parse(saved) : [
+      {
+        id: 'admin-1',
+        name: 'Admin User',
+        email: import.meta.env.VITE_ADMIN_EMAIL || 'admin@example.com',
+        password: 'admin',
+        role: 'admin',
+        joinedAt: new Date().toISOString()
+      }
+    ];
+  });
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('tmart_current_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [notifications, setNotifications] = useState<Notification[]>(() => {
+    const saved = localStorage.getItem('tmart_notifications');
+    return saved ? JSON.parse(saved) : [];
+  });
 
-  // Initial data fetch
+  // Save products to localStorage
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      console.log('Starting data fetch...');
-      
-      const fetchPromise = (async () => {
-        try {
-          // Fetch Session
-          const { data: { session } } = await supabase.auth.getSession();
-          console.log('Session fetched:', !!session);
-          
-          if (session?.user) {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
-            
-            if (profile) {
-              setCurrentUser({
-                id: profile.id,
-                name: profile.name,
-                email: profile.email,
-                role: profile.role,
-                avatar: profile.avatar,
-                joinedAt: profile.joined_at
-              });
-            }
-          }
+    localStorage.setItem('tmart_products', JSON.stringify(products));
+  }, [products]);
 
-          // Fetch Products
-          console.log('Fetching products...');
-          const { data: productsData, error: productsError } = await supabase
-            .from('products')
-            .select('*')
-            .order('created_at', { ascending: false });
-          
-          if (productsError) throw productsError;
-          
-          if (productsData && productsData.length > 0) {
-            setProducts(productsData.map(p => ({
-              ...p,
-              productReviews: p.product_reviews,
-              featured: p.featured || false
-            })));
-          } else {
-            console.log('No products in DB, using mock data');
-            setProducts(INITIAL_PRODUCTS);
-          }
-
-          // Fetch Orders (if logged in)
-          if (session?.user) {
-            const { data: ordersData } = await supabase
-              .from('orders')
-              .select('*')
-              .order('created_at', { ascending: false });
-            
-            if (ordersData) {
-              setOrders(ordersData.map(o => ({
-                ...o,
-                createdAt: o.created_at,
-                refundRequest: o.refund_request
-              })));
-            }
-
-            // Fetch Notifications
-            const { data: notificationsData } = await supabase
-              .from('notifications')
-              .select('*')
-              .eq('user_id', session.user.id)
-              .order('created_at', { ascending: false });
-            
-            if (notificationsData) {
-              setNotifications(notificationsData.map(n => ({
-                ...n,
-                userId: n.user_id,
-                isRead: n.is_read,
-                createdAt: n.created_at
-              })));
-            }
-          }
-
-          // Fetch all users for admin
-          const { data: profilesData } = await supabase
-            .from('profiles')
-            .select('*');
-          
-          if (profilesData) {
-            setUsers(profilesData.map(p => ({
-              id: p.id,
-              name: p.name,
-              email: p.email,
-              role: p.role,
-              avatar: p.avatar,
-              joinedAt: p.joined_at
-            })));
-          }
-        } catch (err) {
-          console.error('Inner fetch error:', err);
-          throw err;
-        }
-      })();
-
-      // 5 second timeout
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Fetch timeout')), 5000)
-      );
-
-      try {
-        await Promise.race([fetchPromise, timeoutPromise]);
-        console.log('Data fetch completed successfully');
-      } catch (error) {
-        console.error('Error fetching data or timeout:', error);
-        // Fallback to initial products if fetch fails or times out
-        setProducts(INITIAL_PRODUCTS);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-
-    // Auth listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (profile) {
-          setCurrentUser({
-            id: profile.id,
-            name: profile.name,
-            email: profile.email,
-            role: profile.role,
-            avatar: profile.avatar,
-            joinedAt: profile.joined_at
-          });
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setCurrentUser(null);
-        setOrders([]);
-        setNotifications([]);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  // Save orders to localStorage
+  useEffect(() => {
+    localStorage.setItem('tmart_orders', JSON.stringify(orders));
+  }, [orders]);
 
   // Load cart from localStorage
   useEffect(() => {
@@ -219,8 +99,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('tmart_cart', JSON.stringify(cart));
   }, [cart]);
 
+  // Save users to localStorage
+  useEffect(() => {
+    localStorage.setItem('tmart_users', JSON.stringify(users));
+  }, [users]);
+
+  // Save current user to localStorage
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('tmart_current_user', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('tmart_current_user');
+    }
+  }, [currentUser]);
+
+  // Save notifications to localStorage
+  useEffect(() => {
+    localStorage.setItem('tmart_notifications', JSON.stringify(notifications));
+  }, [notifications]);
+
   const addToCart = (product: Product, quantity: number = 1) => {
-    let isNewItem = false;
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
@@ -228,13 +126,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
         );
       }
-      isNewItem = true;
+      toast.success(`Added ${product.name} to cart`);
       return [...prev, { ...product, quantity }];
     });
-    
-    if (isNewItem) {
-      toast.success(`Added ${product.name} to cart`);
-    }
   };
 
   const removeFromCart = (productId: string) => {
@@ -252,104 +146,42 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  const addProduct = async (productData: Omit<Product, 'id'>) => {
-    const newId = Math.random().toString(36).substr(2, 9);
-    const newProduct = {
-      id: newId,
-      name: productData.name,
-      price: productData.price,
-      category: productData.category,
-      description: productData.description,
-      image: productData.image,
+  const addProduct = (productData: Omit<Product, 'id'>) => {
+    const newProduct: Product = {
+      ...productData,
+      id: Math.random().toString(36).substr(2, 9),
       images: (productData as any).images || [productData.image],
-      stock: productData.stock,
-      rating: 4.5,
-      reviews: 0,
-      featured: true,
       specs: (productData as any).specs || {
         "Status": "New Arrival",
         "Warranty": "1 Year",
         "Shipping": "Free"
       },
-      product_reviews: [],
-      questions: []
+      featured: true
     };
-
-    const { error } = await supabase.from('products').insert([newProduct]);
-    if (error) {
-      toast.error('Failed to add product');
-      console.error(error);
-      return;
-    }
-
-    setProducts(prev => [{ ...newProduct, productReviews: [] } as any, ...prev]);
+    setProducts(prev => [newProduct, ...prev]);
     toast.success('Product added successfully');
   };
 
-  const updateProduct = async (updatedProduct: Product) => {
-    const { error } = await supabase
-      .from('products')
-      .update({
-        name: updatedProduct.name,
-        price: updatedProduct.price,
-        category: updatedProduct.category,
-        description: updatedProduct.description,
-        image: updatedProduct.image,
-        images: updatedProduct.images,
-        stock: updatedProduct.stock,
-        featured: updatedProduct.featured,
-        specs: updatedProduct.specs
-      })
-      .eq('id', updatedProduct.id);
-
-    if (error) {
-      toast.error('Failed to update product');
-      return;
-    }
-
+  const updateProduct = (updatedProduct: Product) => {
     setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
     toast.success('Product updated successfully');
   };
 
-  const deleteProduct = async (productId: string) => {
-    const { error } = await supabase.from('products').delete().eq('id', productId);
-    if (error) {
-      toast.error('Failed to delete product');
-      return;
-    }
+  const deleteProduct = (productId: string) => {
     setProducts(prev => prev.filter(p => p.id !== productId));
     toast.error('Product deleted');
   };
 
-  const addReview = async (productId: string, reviewData: Omit<Review, 'id' | 'createdAt'>) => {
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
-
-    const newReview: Review = {
-      ...reviewData,
-      id: Math.random().toString(36).substr(2, 9),
-      createdAt: new Date().toISOString()
-    };
-
-    const updatedReviews = [...(product.productReviews || []), newReview];
-    const newAvgRating = updatedReviews.reduce((acc, r) => acc + r.rating, 0) / updatedReviews.length;
-    
-    const { error } = await supabase
-      .from('products')
-      .update({
-        product_reviews: updatedReviews,
-        rating: Number(newAvgRating.toFixed(1)),
-        reviews: updatedReviews.length
-      })
-      .eq('id', productId);
-
-    if (error) {
-      toast.error('Failed to submit review');
-      return;
-    }
-
+  const addReview = (productId: string, reviewData: Omit<Review, 'id' | 'createdAt'>) => {
     setProducts(prev => prev.map(p => {
       if (p.id === productId) {
+        const newReview: Review = {
+          ...reviewData,
+          id: Math.random().toString(36).substr(2, 9),
+          createdAt: new Date().toISOString()
+        };
+        const updatedReviews = [...(p.productReviews || []), newReview];
+        const newAvgRating = updatedReviews.reduce((acc, r) => acc + r.rating, 0) / updatedReviews.length;
         return {
           ...p,
           productReviews: updatedReviews,
@@ -362,33 +194,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     toast.success('Review submitted successfully');
   };
 
-  const addQuestion = async (productId: string, questionData: Omit<Question, 'id' | 'createdAt'>) => {
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
-
-    const newQuestion: Question = {
-      ...questionData,
-      id: Math.random().toString(36).substr(2, 9),
-      createdAt: new Date().toISOString()
-    };
-
-    const updatedQuestions = [...(product.questions || []), newQuestion];
-
-    const { error } = await supabase
-      .from('products')
-      .update({ questions: updatedQuestions })
-      .eq('id', productId);
-
-    if (error) {
-      toast.error('Failed to submit question');
-      return;
-    }
-
+  const addQuestion = (productId: string, questionData: Omit<Question, 'id' | 'createdAt'>) => {
     setProducts(prev => prev.map(p => {
       if (p.id === productId) {
+        const newQuestion: Question = {
+          ...questionData,
+          id: Math.random().toString(36).substr(2, 9),
+          createdAt: new Date().toISOString()
+        };
         return {
           ...p,
-          questions: updatedQuestions
+          questions: [...(p.questions || []), newQuestion]
         };
       }
       return p;
@@ -401,10 +217,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('tmart_cart');
   };
 
-  const placeOrder = async (customerData: any, paymentData?: any) => {
-    const orderId = `ORD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+  const placeOrder = (customerData: any, paymentData?: any) => {
     const newOrder: Order = {
-      id: orderId,
+      id: `ORD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
       userId: currentUser?.id,
       items: [...cart],
       total: cartTotal,
@@ -414,197 +229,107 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       payment: paymentData || { method: 'cod', status: 'pending' }
     };
 
-    const { error } = await supabase.from('orders').insert([{
-      id: newOrder.id,
-      user_id: newOrder.userId,
-      items: newOrder.items,
-      total: newOrder.total,
-      status: newOrder.status,
-      customer: newOrder.customer,
-      payment: newOrder.payment,
-      created_at: newOrder.createdAt
-    }]);
-
-    if (error) {
-      toast.error('Failed to place order');
-      return;
-    }
-
-    // Update stock in DB
-    for (const item of cart) {
-      const product = products.find(p => p.id === item.id);
-      if (product) {
-        await supabase
-          .from('products')
-          .update({ stock: Math.max(0, product.stock - item.quantity) })
-          .eq('id', item.id);
+    // Decrease stock
+    setProducts(prev => prev.map(p => {
+      const cartItem = cart.find(item => item.id === p.id);
+      if (cartItem) {
+        return { ...p, stock: Math.max(0, p.stock - cartItem.quantity) };
       }
-    }
+      return p;
+    }));
 
     setOrders(prev => [newOrder, ...prev]);
     clearCart();
-    // Toast is handled in Checkout.tsx or here
+    toast.success('Order placed successfully!');
   };
 
-  const login = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      toast.error(error.message);
-      return false;
+  const login = (email: string, password: string) => {
+    const user = users.find(u => u.email === email && u.password === password);
+    if (user) {
+      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+      const updatedUser = (adminEmail && user.email === adminEmail) ? { ...user, role: 'admin' as const } : user;
+      setCurrentUser(updatedUser);
+      toast.success(`Welcome back, ${user.name}!`);
+      return true;
     }
-    toast.success('Welcome back!');
-    return true;
+    toast.error('Invalid email or password');
+    return false;
   };
 
-  const signup = async (userData: Omit<User, 'id' | 'role' | 'joinedAt'>) => {
-    const { data, error } = await supabase.auth.signUp({
-      email: userData.email,
-      password: userData.password,
-      options: {
-        data: {
-          name: userData.name
-        }
-      }
-    });
-
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-
-    if (data.user) {
-      const { error: profileError } = await supabase.from('profiles').insert([{
-        id: data.user.id,
-        name: userData.name,
-        email: userData.email,
-        role: 'user'
-      }]);
-
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-      }
-    }
-
+  const signup = (userData: Omit<User, 'id' | 'role' | 'joinedAt'>) => {
+    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+    const newUser: User = {
+      ...userData,
+      id: Math.random().toString(36).substr(2, 9),
+      role: (adminEmail && userData.email === adminEmail) ? 'admin' : 'user',
+      joinedAt: new Date().toISOString()
+    };
+    setUsers(prev => [...prev, newUser]);
+    setCurrentUser(newUser);
     toast.success('Account created successfully!');
   };
 
-  const logout = async () => {
-    await supabase.auth.signOut();
+  const logout = () => {
     setCurrentUser(null);
     toast.success('Logged out successfully');
   };
 
-  const updateCurrentUser = async (updates: Partial<User>) => {
+  const updateCurrentUser = (updates: Partial<User>) => {
     if (!currentUser) return;
-    
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        name: updates.name,
-        avatar: updates.avatar
-      })
-      .eq('id', currentUser.id);
-
-    if (error) {
-      toast.error('Failed to update profile');
-      return;
-    }
-
-    const updatedUser = { ...currentUser, ...updates };
+    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+    const updatedUser = { 
+      ...currentUser, 
+      ...updates,
+      role: (adminEmail && (updates.email === adminEmail || currentUser.email === adminEmail)) ? 'admin' : currentUser.role
+    };
     setCurrentUser(updatedUser);
     setUsers(prev => prev.map(u => u.id === currentUser.id ? updatedUser : u));
     toast.success('Profile updated');
   };
 
-  const updateOrderStatus = async (orderId: string, status: any) => {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status })
-      .eq('id', orderId);
-
-    if (error) {
-      toast.error('Failed to update order status');
-      return;
-    }
-
+  const updateOrderStatus = (orderId: string, status: any) => {
     setOrders(prev => prev.map(order => 
       order.id === orderId ? { ...order, status } : order
     ));
     toast.success(`Order ${status}`);
   };
 
-  const requestRefund = async (orderId: string, refundData: { reason: string; bankDetails: string }) => {
-    const refundRequest = { 
-      ...refundData, 
-      status: 'pending', 
-      createdAt: new Date().toISOString() 
-    };
-
-    const { error } = await supabase
-      .from('orders')
-      .update({ refund_request: refundRequest })
-      .eq('id', orderId);
-
-    if (error) {
-      toast.error('Failed to submit refund request');
-      return;
-    }
-
+  const requestRefund = (orderId: string, refundData: { reason: string; bankDetails: string }) => {
     setOrders(prev => prev.map(order => 
-      order.id === orderId ? { ...order, refundRequest: refundRequest as any } : order
+      order.id === orderId ? { 
+        ...order, 
+        refundRequest: { 
+          ...refundData, 
+          status: 'pending', 
+          createdAt: new Date().toISOString() 
+        } 
+      } : order
     ));
     toast.success('Refund request submitted');
   };
 
-  const completeRefund = async (orderId: string) => {
-    const order = orders.find(o => o.id === orderId);
-    if (!order || !order.refundRequest) return;
-
-    const updatedRefundRequest = { ...order.refundRequest, status: 'completed' };
-
-    const { error } = await supabase
-      .from('orders')
-      .update({ refund_request: updatedRefundRequest })
-      .eq('id', orderId);
-
-    if (error) {
-      toast.error('Failed to complete refund');
-      return;
-    }
-
+  const completeRefund = (orderId: string) => {
     setOrders(prev => prev.map(order => 
-      order.id === orderId ? { 
+      order.id === orderId && order.refundRequest ? { 
         ...order, 
-        refundRequest: updatedRefundRequest as any 
+        refundRequest: { ...order.refundRequest, status: 'completed' } 
       } : order
     ));
     toast.success('Refund completed');
   };
 
-  const cancelOrder = async (orderId: string) => {
+  const cancelOrder = (orderId: string) => {
     const orderToCancel = orders.find(o => o.id === orderId);
     if (!orderToCancel) return;
 
-    const { error } = await supabase
-      .from('orders')
-      .update({ status: 'cancelled' })
-      .eq('id', orderId);
-
-    if (error) {
-      toast.error('Failed to cancel order');
-      return;
-    }
-
-    // Return stock
-    for (const item of orderToCancel.items) {
-      const product = products.find(p => p.id === item.id);
-      if (product) {
-        await supabase
-          .from('products')
-          .update({ stock: product.stock + item.quantity })
-          .eq('id', item.id);
+    // Return stock if cancelled
+    setProducts(pPrev => pPrev.map(p => {
+      const orderItem = orderToCancel.items.find(item => item.id === p.id);
+      if (orderItem) {
+        return { ...p, stock: p.stock + orderItem.quantity };
       }
-    }
+      return p;
+    }));
 
     setOrders(prev => prev.map(order => 
       order.id === orderId ? { ...order, status: 'cancelled' } : order
@@ -613,71 +338,44 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     toast.success('Order cancelled successfully');
   };
 
-  const answerQuestion = async (productId: string, questionId: string, answer: string) => {
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
-
+  const answerQuestion = (productId: string, questionId: string, answer: string) => {
     let targetUserId = '';
-    const updatedQuestions = product.questions?.map(q => {
-      if (q.id === questionId) {
-        targetUserId = q.userId;
-        return { ...q, answer };
-      }
-      return q;
-    });
-
-    const { error } = await supabase
-      .from('products')
-      .update({ questions: updatedQuestions })
-      .eq('id', productId);
-
-    if (error) {
-      toast.error('Failed to submit answer');
-      return;
-    }
+    let productName = '';
 
     setProducts(prev => prev.map(p => {
       if (p.id === productId) {
-        return { ...p, questions: updatedQuestions };
+        productName = p.name;
+        return {
+          ...p,
+          questions: p.questions?.map(q => {
+            if (q.id === questionId) {
+              targetUserId = q.userId;
+              return { ...q, answer };
+            }
+            return q;
+          })
+        };
       }
       return p;
     }));
 
     if (targetUserId) {
-      const newNotification = {
+      const newNotification: Notification = {
         id: Math.random().toString(36).substr(2, 9),
-        user_id: targetUserId,
+        userId: targetUserId,
         title: 'New Answer to Your Question',
-        message: `An admin has replied to your question about ${product.name}.`,
+        message: `An admin has replied to your question about ${productName}.`,
         link: `/product/${productId}?tab=questions`,
-        is_read: false,
-        created_at: new Date().toISOString()
+        isRead: false,
+        createdAt: new Date().toISOString()
       };
-
-      await supabase.from('notifications').insert([newNotification]);
-      
-      setNotifications(prev => [{
-        id: newNotification.id,
-        userId: newNotification.user_id,
-        title: newNotification.title,
-        message: newNotification.message,
-        link: newNotification.link,
-        isRead: newNotification.is_read,
-        createdAt: newNotification.created_at
-      }, ...prev]);
+      setNotifications(prev => [newNotification, ...prev]);
     }
 
     toast.success('Answer submitted');
   };
 
-  const markNotificationAsRead = async (notificationId: string) => {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('id', notificationId);
-
-    if (error) return;
-
+  const markNotificationAsRead = (notificationId: string) => {
     setNotifications(prev => prev.map(n => 
       n.id === notificationId ? { ...n, isRead: true } : n
     ));
@@ -685,6 +383,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const cartTotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+
+  const isAdmin = currentUser?.role === 'admin' || (currentUser?.email && import.meta.env.VITE_ADMIN_EMAIL && currentUser.email === import.meta.env.VITE_ADMIN_EMAIL);
 
   return (
     <StoreContext.Provider value={{
@@ -714,11 +414,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       answerQuestion,
       notifications,
       markNotificationAsRead,
-      isLoading,
       cartTotal,
       cartCount,
       isCartOpen,
-      setIsCartOpen
+      setIsCartOpen,
+      isAdmin
     }}>
       {children}
     </StoreContext.Provider>

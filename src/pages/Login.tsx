@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { motion } from 'motion/react';
 import { LogIn, Mail, Lock, ArrowRight } from 'lucide-react';
@@ -9,12 +9,14 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const { login } = useStore();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const success = await login(email, password);
     if (success) {
-      navigate('/profile');
+      const from = (location.state as any)?.from?.pathname || '/profile';
+      navigate(from, { replace: true });
     }
   };
 

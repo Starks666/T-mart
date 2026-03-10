@@ -9,7 +9,7 @@ VALUES
 ('6', 'Titan Desktop Pro', 3999, 'Unmatched performance for heavy rendering and data processing. The pinnacle of desktop computing.', 'https://picsum.photos/seed/pc1/800/800', ARRAY['https://picsum.photos/seed/pc1/800/800'], 'Computing', 4.9, 120, 5, false, '{"GPU": "RTX 5090 Ti", "CPU": "Threadripper 7000", "Cooling": "Liquid Nitrogen Loop", "Power": "1500W Platinum"}', '[]', '[]')
 ON CONFLICT (id) DO NOTHING;
 
--- Insert default admin user
+-- Insert default admin user (Update the email to your admin email)
 INSERT INTO profiles (id, name, email, password, role, joinedAt)
-VALUES ('admin-1', 'Admin User', 'admin@example.com', 'admin', 'admin', NOW())
+VALUES ('admin-1', 'Admin User', 'your-admin-email@example.com', 'admin123', 'admin', NOW())
 ON CONFLICT (id) DO NOTHING;

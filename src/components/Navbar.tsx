@@ -6,7 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
 export default function Navbar() {
-  const { cartCount, setIsCartOpen, currentUser, notifications, markNotificationAsRead } = useStore();
+  const { cartCount, setIsCartOpen, currentUser, notifications, markNotificationAsRead, isAdmin } = useStore();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -27,11 +27,8 @@ export default function Navbar() {
     { label: 'Shop', path: '/shop' },
     { label: 'Categories', path: '/categories' },
     { label: 'About', path: '/about' },
+    ...(isAdmin ? [{ label: 'Admin', path: '/admin' }] : []),
   ];
-
-  if (currentUser?.role === 'admin') {
-    menuItems.push({ label: 'Admin', path: '/admin' });
-  }
 
   return (
     <motion.nav 

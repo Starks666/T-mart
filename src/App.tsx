@@ -14,7 +14,6 @@ import Admin from './pages/Admin';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Profile from './pages/Profile';
-import ProtectedRoute from './components/ProtectedRoute';
 import { motion } from 'motion/react';
 import { Anchor } from 'lucide-react';
 
@@ -58,18 +57,10 @@ function AppContent() {
             <Route path="/shop" element={<Shop />} />
             <Route path="/product/:id" element={<ProductDetails />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/admin" element={
-              <ProtectedRoute requireAdmin>
-                <Admin />
-              </ProtectedRoute>
-            } />
+            <Route path="/admin" element={<Admin />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            } />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/categories" element={
               <div className="pt-40 text-center flex flex-col items-center">
                 <h1 className="text-4xl font-display font-bold mb-4 flex items-center gap-3 text-red-600">
@@ -114,7 +105,7 @@ function AppContent() {
                 <li><Link to="/shop" className="hover:text-primary transition-colors">All Products</Link></li>
                 <li><Link to="/" className="hover:text-primary transition-colors">Featured</Link></li>
                 <li><Link to="/shop" className="hover:text-primary transition-colors">New Arrivals</Link></li>
-                {useStore().currentUser?.role === 'admin' && (
+                {useStore().isAdmin && (
                   <li><Link to="/admin" className="hover:text-primary transition-colors">Admin Dashboard</Link></li>
                 )}
               </ul>
