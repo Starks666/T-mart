@@ -15,7 +15,7 @@ export default function MobileNav() {
   ];
 
   return (
-    <div className="md:hidden fixed bottom-6 left-6 right-6 z-50">
+    <div className="lg:hidden fixed bottom-6 left-6 right-6 z-50">
       <motion.div 
         initial={{ y: 100 }}
         animate={{ y: 0 }}

@@ -42,7 +42,7 @@ export default function Navbar() {
           <span className="text-lg md:text-xl font-display font-bold tracking-tight text-primary whitespace-nowrap">T mart</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-6 text-sm font-medium opacity-70">
+        <div className="hidden lg:flex items-center gap-6 text-sm font-medium opacity-70">
           <Link to="/" className="hover:opacity-100 transition-opacity">Home</Link>
           <Link to="/shop" className="hover:opacity-100 transition-opacity">Shop</Link>
           <Link to="/categories" className="hover:opacity-100 transition-opacity">Categories</Link>
@@ -50,20 +50,20 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
-          <button className="p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors">
+          <button className="hidden lg:flex p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors">
             <Search className="w-4 h-4 md:w-5 md:h-5" />
           </button>
           
           <button 
             onClick={toggleTheme}
-            className="p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors"
+            className="hidden lg:flex p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors"
             title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
           >
             {theme === 'light' ? <Moon className="w-4 h-4 md:w-5 md:h-5" /> : <Sun className="w-4 h-4 md:w-5 md:h-5 text-primary" />}
           </button>
 
           {currentUser && (
-            <div className="relative">
+            <div className="relative hidden lg:block">
               <button 
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                 className="p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors relative"
@@ -127,7 +127,7 @@ export default function Navbar() {
             </div>
           )}
 
-          <Link to={currentUser ? "/profile" : "/login"} className="hidden sm:flex items-center gap-1 md:gap-2 p-1 md:p-1.5 hover:bg-primary/10 rounded-full transition-colors">
+          <Link to={currentUser ? "/profile" : "/login"} className="hidden lg:flex items-center gap-1 md:gap-2 p-1 md:p-1.5 hover:bg-primary/10 rounded-full transition-colors">
             {currentUser?.avatar ? (
               <img src={currentUser.avatar} alt="" className="w-6 h-6 md:w-7 md:h-7 rounded-full object-cover border border-primary/20" />
             ) : (
@@ -143,7 +143,7 @@ export default function Navbar() {
             animate={cartCount > 0 ? { scale: [1, 1.2, 1] } : {}}
             transition={{ duration: 0.3 }}
             onClick={() => setIsCartOpen(true)}
-            className="relative p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors hidden sm:flex"
+            className="relative p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors hidden lg:flex"
           >
             <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
             {cartCount > 0 && (
