@@ -6,7 +6,7 @@ const MotionLink = motion.create(Link);
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-20 md:pt-32 overflow-hidden bg-bg-base">
+    <section className="relative min-h-screen flex items-center justify-center pt-32 md:pt-40 overflow-hidden bg-bg-base">
       {/* Background Trident */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <Anchor className="w-[300px] h-[300px] md:w-[600px] md:h-[600px] text-red-600/5 -rotate-12" />
