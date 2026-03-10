@@ -6,6 +6,7 @@ import Navbar from './components/Navbar';
 import TopBanner from './components/TopBanner';
 import CartDrawer from './components/CartDrawer';
 import FloatingCart from './components/FloatingCart';
+import MobileNav from './components/MobileNav';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
 import ProductDetails from './pages/ProductDetails';
@@ -35,7 +36,7 @@ function AppContent() {
     <Router>
       <div className="min-h-screen flex flex-col">
         <Toaster 
-          position="bottom-right"
+          position="top-center"
           toastOptions={{
             style: {
               background: 'rgba(255, 255, 255, 0.1)',
@@ -50,6 +51,7 @@ function AppContent() {
         <Navbar />
         <CartDrawer />
         <FloatingCart />
+        <MobileNav />
         
         <main className="flex-1">
           <Routes>

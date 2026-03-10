@@ -30,35 +30,35 @@ export default function ProductCard({ product }: ProductCardProps) {
             />
           )}
         </Link>
-        <div className="absolute bottom-4 right-4 translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+        <div className="absolute bottom-2 right-2 md:bottom-4 md:right-4 translate-y-0 opacity-100 md:translate-y-12 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition-all duration-300">
           <button 
             onClick={() => addToCart(product)}
-            className="p-3 bg-primary text-white rounded-full hover:bg-primary-dark transition-all duration-300 shadow-lg"
+            className="p-2 md:p-3 bg-primary text-white rounded-full hover:bg-primary-dark transition-all duration-300 shadow-lg"
           >
-            <ShoppingCart className="w-5 h-5" />
+            <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
           </button>
         </div>
-        <div className="absolute top-4 left-4">
-          <span className="px-3 py-1 rounded-sm bg-bg-base/90 text-[10px] font-bold uppercase tracking-widest text-primary shadow-sm">
+        <div className="absolute top-2 left-2 md:top-4 md:left-4">
+          <span className="px-2 py-0.5 md:px-3 md:py-1 rounded-sm bg-bg-base/90 text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-primary shadow-sm">
             {product.category}
           </span>
         </div>
       </div>
 
-      <div className="p-4 md:p-6 flex-1 flex flex-col">
+      <div className="p-3 md:p-6 flex-1 flex flex-col">
         <Link to={`/product/${product.id}`} className="group/title">
-          <h3 className="text-base md:text-lg font-display font-semibold mb-1 group-hover/title:text-primary transition-colors">
+          <h3 className="text-sm md:text-lg font-display font-semibold mb-1 group-hover/title:text-primary transition-colors line-clamp-1">
             {product.name}
           </h3>
         </Link>
-        <p className="text-xs md:text-sm opacity-40 line-clamp-2 mb-4 flex-1">
+        <p className="text-[10px] md:text-sm opacity-40 line-clamp-2 mb-2 md:mb-4 flex-1">
           {product.description}
         </p>
         <div className="flex items-center justify-between mt-auto">
-          <span className="text-base md:text-lg font-bold">{formatPrice(product.price)}</span>
+          <span className="text-sm md:text-lg font-bold">{formatPrice(product.price)}</span>
           <button 
             onClick={() => addToCart(product)}
-            className="text-[10px] font-bold uppercase tracking-widest text-primary border-b border-primary hover:opacity-60 transition-opacity"
+            className="hidden md:block text-[10px] font-bold uppercase tracking-widest text-primary border-b border-primary hover:opacity-60 transition-opacity"
           >
             Add to Cart
           </button>

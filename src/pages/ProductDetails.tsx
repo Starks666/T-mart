@@ -61,13 +61,13 @@ export default function ProductDetails() {
         Back
       </button>
 
-      <div className="flex flex-col gap-16 max-w-4xl mx-auto">
+      <div className="flex flex-col gap-8 md:gap-16 max-w-4xl mx-auto">
         {/* Image Gallery */}
-        <div className="space-y-6 w-full">
+        <div className="space-y-4 md:space-y-6 w-full">
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="aspect-[16/9] md:aspect-square rounded-2xl overflow-hidden border border-primary/10 bg-bg-base"
+            className="aspect-square rounded-2xl overflow-hidden border border-primary/10 bg-bg-base"
           >
             {activeImage && (
               <img 
@@ -92,55 +92,55 @@ export default function ProductDetails() {
         </div>
 
         {/* Info */}
-        <div className="space-y-12 w-full">
-          <div className="space-y-6 text-center">
+        <div className="space-y-8 md:space-y-12 w-full">
+          <div className="space-y-4 md:space-y-6 text-center">
             <div className="flex items-center justify-center gap-2">
               <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">
                 {product.category}
               </span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-display font-bold leading-tight">{product.name}</h1>
-            <p className="text-4xl font-display font-bold text-primary">{formatPrice(product.price)}</p>
-            <p className="opacity-60 leading-relaxed text-lg max-w-2xl mx-auto">{product.description}</p>
+            <h1 className="text-3xl md:text-6xl font-display font-bold leading-tight">{product.name}</h1>
+            <p className="text-2xl md:text-4xl font-display font-bold text-primary">{formatPrice(product.price)}</p>
+            <p className="opacity-60 leading-relaxed text-sm md:text-lg max-w-2xl mx-auto">{product.description}</p>
           </div>
 
-          <div className="space-y-8 max-w-2xl mx-auto">
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              <div className="flex items-center border border-primary/20 rounded-2xl overflow-hidden bg-bg-base">
+          <div className="space-y-6 md:space-y-8 max-w-2xl mx-auto">
+            <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-6">
+              <div className="flex items-center border border-primary/20 rounded-2xl overflow-hidden bg-bg-base w-full sm:w-auto justify-between sm:justify-start">
                 <button 
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-6 py-4 hover:bg-primary/10 transition-colors text-xl font-bold"
+                  className="px-6 py-3 md:py-4 hover:bg-primary/10 transition-colors text-xl font-bold"
                 >
                   -
                 </button>
-                <span className="px-8 py-4 font-bold text-xl border-x border-primary/10 min-w-[80px] text-center">
+                <span className="px-8 py-3 md:py-4 font-bold text-xl border-x border-primary/10 min-w-[80px] text-center">
                   {quantity}
                 </span>
                 <button 
                   onClick={() => setQuantity(quantity + 1)}
-                  className="px-6 py-4 hover:bg-primary/10 transition-colors text-xl font-bold"
+                  className="px-6 py-3 md:py-4 hover:bg-primary/10 transition-colors text-xl font-bold"
                 >
                   +
                 </button>
               </div>
               <button 
                 onClick={() => addToCart(product, quantity)}
-                className="btn-primary flex-1 py-5 text-xl flex items-center justify-center gap-3 w-full"
+                className="btn-primary flex-1 py-4 md:py-5 text-lg md:text-xl flex items-center justify-center gap-3 w-full"
               >
-                <ShoppingCart className="w-6 h-6" />
+                <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
                 Add to Cart
               </button>
             </div>
             
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-3 gap-3 md:gap-6">
               {[
-                { icon: Shield, label: "Quality Guaranteed" },
-                { icon: Truck, label: "Safe Shipping" },
-                { icon: RefreshCcw, label: "Easy Returns" }
+                { icon: Shield, label: "Quality" },
+                { icon: Truck, label: "Shipping" },
+                { icon: RefreshCcw, label: "Returns" }
               ].map((item, i) => (
-                <div key={i} className="border border-primary/10 rounded-2xl p-6 flex flex-col items-center gap-3 text-center bg-bg-base">
-                  <item.icon className="w-6 h-6 opacity-40" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">{item.label}</span>
+                <div key={i} className="border border-primary/10 rounded-2xl p-4 md:p-6 flex flex-col items-center gap-2 md:gap-3 text-center bg-bg-base">
+                  <item.icon className="w-5 h-5 md:w-6 md:h-6 opacity-40" />
+                  <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-wider opacity-60">{item.label}</span>
                 </div>
               ))}
             </div>
@@ -262,9 +262,9 @@ export default function ProductDetails() {
                         />
                       </div>
                       <button 
-                        onClick={async () => {
+                        onClick={() => {
                           if (!reviewComment.trim()) return;
-                          await addReview(product.id, {
+                          addReview(product.id, {
                             userId: currentUser.id,
                             userName: currentUser.name,
                             rating: reviewRating,
@@ -342,9 +342,9 @@ export default function ProductDetails() {
                         onChange={(e) => setQuestionText(e.target.value)}
                         placeholder="Type your question here..."
                         className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-6 pr-16 focus:outline-none focus:border-primary transition-colors"
-                        onKeyDown={async (e) => {
+                        onKeyDown={(e) => {
                           if (e.key === 'Enter' && questionText.trim()) {
-                            await addQuestion(product.id, {
+                            addQuestion(product.id, {
                               userId: currentUser.id,
                               userName: currentUser.name,
                               text: questionText
@@ -354,9 +354,9 @@ export default function ProductDetails() {
                         }}
                       />
                       <button 
-                        onClick={async () => {
+                        onClick={() => {
                           if (!questionText.trim()) return;
-                          await addQuestion(product.id, {
+                          addQuestion(product.id, {
                             userId: currentUser.id,
                             userName: currentUser.name,
                             text: questionText

@@ -26,7 +26,7 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
           {featuredProducts.map((product, i) => (
             <motion.div
               key={product.id}
@@ -43,10 +43,14 @@ export default function Home() {
 
       {/* Newsletter */}
       <section className="max-w-7xl mx-auto px-6">
-        <div className="glass-card p-12 md:p-20 relative overflow-hidden text-center border border-black/5">
+        <div className="glass-card p-8 md:p-20 relative overflow-hidden text-center border border-black/5">
           <div className="relative z-10 space-y-8">
-            <h2 className="text-lg sm:text-3xl md:text-5xl font-display font-bold flex items-center justify-center gap-2 md:gap-3 whitespace-nowrap">
-              Join the <span className="text-red-600 flex items-center gap-1.5 md:gap-2"><Anchor className="w-5 h-5 md:w-10 md:h-10" /> T mart</span> Community
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-display font-bold flex flex-col sm:flex-row items-center justify-center gap-2 md:gap-3 whitespace-nowrap">
+              <span>Join the</span>
+              <span className="text-red-600 flex items-center gap-1.5 md:gap-2">
+                <Anchor className="w-5 h-5 md:w-10 md:h-10" /> T mart
+              </span>
+              <span>Community</span>
             </h2>
             <p className="text-black/60 max-w-xl mx-auto">
               Get updates on new arrivals, exclusive offers, and minimalist living tips.

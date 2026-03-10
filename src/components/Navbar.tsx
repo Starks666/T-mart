@@ -34,7 +34,7 @@ export default function Navbar() {
     <motion.nav 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="fixed top-10 left-0 right-0 z-40 px-6 py-4"
+      className="fixed top-4 md:top-10 left-0 right-0 z-40 px-4 md:px-6 py-2 md:py-4"
     >
       <div className="max-w-7xl mx-auto glass rounded-full px-4 md:px-6 py-2 md:py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-1.5 md:gap-2 shrink-0">
@@ -143,7 +143,7 @@ export default function Navbar() {
             animate={cartCount > 0 ? { scale: [1, 1.2, 1] } : {}}
             transition={{ duration: 0.3 }}
             onClick={() => setIsCartOpen(true)}
-            className="relative p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors"
+            className="relative p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors hidden sm:flex"
           >
             <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
             {cartCount > 0 && (
@@ -157,7 +157,7 @@ export default function Navbar() {
             )}
           </motion.button>
           
-          <div className="relative md:hidden">
+          <div className="relative md:hidden hidden">
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-1.5 hover:bg-primary/10 rounded-full transition-colors"

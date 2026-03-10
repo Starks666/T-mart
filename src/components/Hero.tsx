@@ -6,14 +6,14 @@ const MotionLink = motion.create(Link);
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-32 overflow-hidden bg-bg-base">
+    <section className="relative min-h-screen flex items-center justify-center pt-20 md:pt-32 overflow-hidden bg-bg-base">
       {/* Background Trident */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <Anchor className="w-[300px] h-[300px] md:w-[600px] md:h-[600px] text-red-600/5 -rotate-12" />
       </div>
 
       {/* New Collection Button - Top Left */}
-      <div className="absolute top-32 left-4 md:left-12 z-20">
+      <div className="absolute top-24 md:top-32 left-1/2 -translate-x-1/2 md:left-12 md:translate-x-0 z-20">
         <MotionLink
           to="/shop"
           initial={{ opacity: 0, x: -20 }}
