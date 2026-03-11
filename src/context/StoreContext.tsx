@@ -85,7 +85,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           const adminUser: User = {
             id: 'admin-1',
             name: 'Admin User',
-            email: import.meta.env.VITE_ADMIN_EMAIL || 'fahimfahim27122003@gmail.com',
+            email: import.meta.env.VITE_ADMIN_EMAIL || 'calvinstarks666@gmail.com',
             password: 'admin',
             role: 'admin',
             joinedAt: new Date().toISOString()
@@ -95,14 +95,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('Failed to load data from Supabase:', error);
-        // Fallback to localStorage if Supabase fails
-        const savedProducts = localStorage.getItem('tmart_products');
-        const savedOrders = localStorage.getItem('tmart_orders');
-        const savedUsers = localStorage.getItem('tmart_users');
-        
-        if (savedProducts) setProducts(JSON.parse(savedProducts));
-        if (savedOrders) setOrders(JSON.parse(savedOrders));
-        if (savedUsers) setUsers(JSON.parse(savedUsers));
       } finally {
         setIsLoading(false);
       }
@@ -110,16 +102,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     loadData();
   }, []);
-
-  // Save products to localStorage (as backup)
-  useEffect(() => {
-    localStorage.setItem('tmart_products', JSON.stringify(products));
-  }, [products]);
-
-  // Save orders to localStorage (as backup)
-  useEffect(() => {
-    localStorage.setItem('tmart_orders', JSON.stringify(orders));
-  }, [orders]);
 
   // Load cart from localStorage
   useEffect(() => {
@@ -137,11 +119,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem('tmart_cart', JSON.stringify(cart));
   }, [cart]);
-
-  // Save users to localStorage (as backup)
-  useEffect(() => {
-    localStorage.setItem('tmart_users', JSON.stringify(users));
-  }, [users]);
 
   // Save current user to localStorage
   useEffect(() => {
@@ -201,11 +178,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     try {
       await supabaseService.upsertProduct(newProduct);
       setProducts(prev => [newProduct, ...prev]);
-      toast.success('Product added successfully');
+      toast.success('Product added to database');
     } catch (error) {
       console.error('Failed to add product to Supabase:', error);
-      toast.error('Failed to sync with database, but saved locally');
-      setProducts(prev => [newProduct, ...prev]);
+      toast.error('Failed to save to database. Please check your connection.');
     }
   };
 
@@ -231,44 +207,58 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addReview = (productId: string, reviewData: Omit<Review, 'id' | 'createdAt'>) => {
-    setProducts(prev => prev.map(p => {
-      if (p.id === productId) {
-        const newReview: Review = {
-          ...reviewData,
-          id: Math.random().toString(36).substr(2, 9),
-          createdAt: new Date().toISOString()
-        };
-        const updatedReviews = [...(p.productReviews || []), newReview];
-        const newAvgRating = updatedReviews.reduce((acc, r) => acc + r.rating, 0) / updatedReviews.length;
-        return {
-          ...p,
-          productReviews: updatedReviews,
-          rating: Number(newAvgRating.toFixed(1)),
-          reviews: updatedReviews.length
-        };
-      }
-      return p;
-    }));
-    toast.success('Review submitted successfully');
+  const addReview = async (productId: string, reviewData: Omit<Review, 'id' | 'createdAt'>) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    const newReview: Review = {
+      ...reviewData,
+      id: Math.random().toString(36).substr(2, 9),
+      createdAt: new Date().toISOString()
+    };
+    const updatedReviews = [...(product.productReviews || []), newReview];
+    const newAvgRating = updatedReviews.reduce((acc, r) => acc + r.rating, 0) / updatedReviews.length;
+    
+    const updatedProduct = {
+      ...product,
+      productReviews: updatedReviews,
+      rating: Number(newAvgRating.toFixed(1)),
+      reviews: updatedReviews.length
+    };
+
+    try {
+      await supabaseService.upsertProduct(updatedProduct);
+      setProducts(prev => prev.map(p => p.id === productId ? updatedProduct : p));
+      toast.success('Review submitted successfully');
+    } catch (error) {
+      console.error('Failed to save review to Supabase:', error);
+      toast.error('Failed to save review to database');
+    }
   };
 
-  const addQuestion = (productId: string, questionData: Omit<Question, 'id' | 'createdAt'>) => {
-    setProducts(prev => prev.map(p => {
-      if (p.id === productId) {
-        const newQuestion: Question = {
-          ...questionData,
-          id: Math.random().toString(36).substr(2, 9),
-          createdAt: new Date().toISOString()
-        };
-        return {
-          ...p,
-          questions: [...(p.questions || []), newQuestion]
-        };
-      }
-      return p;
-    }));
-    toast.success('Question submitted successfully');
+  const addQuestion = async (productId: string, questionData: Omit<Question, 'id' | 'createdAt'>) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    const newQuestion: Question = {
+      ...questionData,
+      id: Math.random().toString(36).substr(2, 9),
+      createdAt: new Date().toISOString()
+    };
+    
+    const updatedProduct = {
+      ...product,
+      questions: [...(product.questions || []), newQuestion]
+    };
+
+    try {
+      await supabaseService.upsertProduct(updatedProduct);
+      setProducts(prev => prev.map(p => p.id === productId ? updatedProduct : p));
+      toast.success('Question submitted successfully');
+    } catch (error) {
+      console.error('Failed to save question to Supabase:', error);
+      toast.error('Failed to save question to database');
+    }
   };
 
   const clearCart = () => {
@@ -314,7 +304,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const login = (email: string, password: string) => {
     const user = users.find(u => u.email === email && u.password === password);
     if (user) {
-      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'fahimfahim27122003@gmail.com';
+      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'calvinstarks666@gmail.com';
       const updatedUser = (user.email === adminEmail) ? { ...user, role: 'admin' as const } : user;
       setCurrentUser(updatedUser);
       toast.success(`Welcome back, ${user.name}!`);
@@ -324,17 +314,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return false;
   };
 
-  const signup = (userData: Omit<User, 'id' | 'role' | 'joinedAt'>) => {
-    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'fahimfahim27122003@gmail.com';
+  const signup = async (userData: Omit<User, 'id' | 'role' | 'joinedAt'>) => {
+    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'calvinstarks666@gmail.com';
     const newUser: User = {
       ...userData,
       id: Math.random().toString(36).substr(2, 9),
       role: (userData.email === adminEmail) ? 'admin' : 'user',
       joinedAt: new Date().toISOString()
     };
-    setUsers(prev => [...prev, newUser]);
-    setCurrentUser(newUser);
-    toast.success('Account created successfully!');
+    
+    try {
+      await supabaseService.updateProfile(newUser.id, newUser);
+      setUsers(prev => [...prev, newUser]);
+      setCurrentUser(newUser);
+      toast.success('Account created successfully!');
+    } catch (error) {
+      console.error('Failed to save user to Supabase:', error);
+      toast.error('Failed to save account to database');
+    }
   };
 
   const logout = () => {
@@ -342,105 +339,159 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     toast.success('Logged out successfully');
   };
 
-  const updateCurrentUser = (updates: Partial<User>) => {
+  const updateCurrentUser = async (updates: Partial<User>) => {
     if (!currentUser) return;
-    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'fahimfahim27122003@gmail.com';
+    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'calvinstarks666@gmail.com';
     const updatedUser = { 
       ...currentUser, 
       ...updates,
       role: (updates.email === adminEmail || currentUser.email === adminEmail) ? 'admin' : currentUser.role
     };
-    setCurrentUser(updatedUser);
-    setUsers(prev => prev.map(u => u.id === currentUser.id ? updatedUser : u));
-    toast.success('Profile updated');
+
+    try {
+      await supabaseService.updateProfile(currentUser.id, updatedUser);
+      setCurrentUser(updatedUser);
+      setUsers(prev => prev.map(u => u.id === currentUser.id ? updatedUser : u));
+      toast.success('Profile updated');
+    } catch (error) {
+      console.error('Failed to update profile in Supabase:', error);
+      toast.error('Failed to update profile in database');
+    }
   };
 
-  const updateOrderStatus = (orderId: string, status: any) => {
-    setOrders(prev => prev.map(order => 
-      order.id === orderId ? { ...order, status } : order
-    ));
-    toast.success(`Order ${status}`);
+  const updateOrderStatus = async (orderId: string, status: any) => {
+    try {
+      await supabaseService.updateOrder(orderId, { status });
+      setOrders(prev => prev.map(order => 
+        order.id === orderId ? { ...order, status } : order
+      ));
+      toast.success(`Order ${status}`);
+    } catch (error) {
+      console.error('Failed to update order status in Supabase:', error);
+      toast.error('Failed to update status in database');
+    }
   };
 
-  const requestRefund = (orderId: string, refundData: { reason: string; bankDetails: string }) => {
-    setOrders(prev => prev.map(order => 
-      order.id === orderId ? { 
-        ...order, 
-        refundRequest: { 
-          ...refundData, 
-          status: 'pending', 
-          createdAt: new Date().toISOString() 
-        } 
-      } : order
-    ));
-    toast.success('Refund request submitted');
+  const requestRefund = async (orderId: string, refundData: { reason: string; bankDetails: string }) => {
+    const refundRequest = { 
+      ...refundData, 
+      status: 'pending' as const, 
+      createdAt: new Date().toISOString() 
+    };
+    
+    try {
+      await supabaseService.updateOrder(orderId, { refundRequest });
+      setOrders(prev => prev.map(order => 
+        order.id === orderId ? { ...order, refundRequest } : order
+      ));
+      toast.success('Refund request submitted');
+    } catch (error) {
+      console.error('Failed to request refund in Supabase:', error);
+      toast.error('Failed to save refund request to database');
+    }
   };
 
-  const completeRefund = (orderId: string) => {
-    setOrders(prev => prev.map(order => 
-      order.id === orderId && order.refundRequest ? { 
-        ...order, 
-        refundRequest: { ...order.refundRequest, status: 'completed' } 
-      } : order
-    ));
-    toast.success('Refund completed');
+  const completeRefund = async (orderId: string) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order || !order.refundRequest) return;
+
+    const updatedRefundRequest = { ...order.refundRequest, status: 'completed' };
+    
+    try {
+      await supabaseService.updateOrder(orderId, { refundRequest: updatedRefundRequest });
+      setOrders(prev => prev.map(order => 
+        order.id === orderId ? { 
+          ...order, 
+          refundRequest: updatedRefundRequest 
+        } : order
+      ));
+      toast.success('Refund completed');
+    } catch (error) {
+      console.error('Failed to complete refund in Supabase:', error);
+      toast.error('Failed to update refund status in database');
+    }
   };
 
-  const cancelOrder = (orderId: string) => {
+  const cancelOrder = async (orderId: string) => {
     const orderToCancel = orders.find(o => o.id === orderId);
     if (!orderToCancel) return;
 
-    // Return stock if cancelled
-    setProducts(pPrev => pPrev.map(p => {
-      const orderItem = orderToCancel.items.find(item => item.id === p.id);
-      if (orderItem) {
-        return { ...p, stock: p.stock + orderItem.quantity };
+    try {
+      await supabaseService.updateOrder(orderId, { status: 'cancelled' });
+      
+      // Return stock if cancelled
+      for (const item of orderToCancel.items) {
+        const product = products.find(p => p.id === item.id);
+        if (product) {
+          await supabaseService.upsertProduct({
+            ...product,
+            stock: product.stock + item.quantity
+          });
+        }
       }
-      return p;
-    }));
 
-    setOrders(prev => prev.map(order => 
-      order.id === orderId ? { ...order, status: 'cancelled' } : order
-    ));
-    
-    toast.success('Order cancelled successfully');
+      setOrders(prev => prev.map(order => 
+        order.id === orderId ? { ...order, status: 'cancelled' } : order
+      ));
+      
+      // Update local products state too
+      setProducts(pPrev => pPrev.map(p => {
+        const orderItem = orderToCancel.items.find(item => item.id === p.id);
+        if (orderItem) {
+          return { ...p, stock: p.stock + orderItem.quantity };
+        }
+        return p;
+      }));
+      
+      toast.success('Order cancelled successfully');
+    } catch (error) {
+      console.error('Failed to cancel order in Supabase:', error);
+      toast.error('Failed to cancel order in database');
+    }
   };
 
-  const answerQuestion = (productId: string, questionId: string, answer: string) => {
+  const answerQuestion = async (productId: string, questionId: string, answer: string) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
     let targetUserId = '';
-    let productName = '';
-
-    setProducts(prev => prev.map(p => {
-      if (p.id === productId) {
-        productName = p.name;
-        return {
-          ...p,
-          questions: p.questions?.map(q => {
-            if (q.id === questionId) {
-              targetUserId = q.userId;
-              return { ...q, answer };
-            }
-            return q;
-          })
-        };
+    const updatedQuestions = product.questions?.map(q => {
+      if (q.id === questionId) {
+        targetUserId = q.userId;
+        return { ...q, answer };
       }
-      return p;
-    }));
+      return q;
+    });
 
-    if (targetUserId) {
-      const newNotification: Notification = {
-        id: Math.random().toString(36).substr(2, 9),
-        userId: targetUserId,
-        title: 'New Answer to Your Question',
-        message: `An admin has replied to your question about ${productName}.`,
-        link: `/product/${productId}?tab=questions`,
-        isRead: false,
-        createdAt: new Date().toISOString()
-      };
-      setNotifications(prev => [newNotification, ...prev]);
+    const updatedProduct = {
+      ...product,
+      questions: updatedQuestions
+    };
+
+    try {
+      await supabaseService.upsertProduct(updatedProduct);
+      setProducts(prev => prev.map(p => p.id === productId ? updatedProduct : p));
+
+      if (targetUserId) {
+        const newNotification: Notification = {
+          id: Math.random().toString(36).substr(2, 9),
+          userId: targetUserId,
+          title: 'New Answer to Your Question',
+          message: `An admin has replied to your question about ${product.name}.`,
+          link: `/product/${productId}?tab=questions`,
+          isRead: false,
+          createdAt: new Date().toISOString()
+        };
+        
+        await supabaseService.createNotification(newNotification);
+        setNotifications(prev => [newNotification, ...prev]);
+      }
+
+      toast.success('Answer submitted');
+    } catch (error) {
+      console.error('Failed to answer question in Supabase:', error);
+      toast.error('Failed to save answer to database');
     }
-
-    toast.success('Answer submitted');
   };
 
   const markNotificationAsRead = (notificationId: string) => {
@@ -452,7 +503,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const cartTotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  const isAdmin = currentUser?.role === 'admin' || (currentUser?.email && (import.meta.env.VITE_ADMIN_EMAIL || 'fahimfahim27122003@gmail.com') === currentUser.email);
+  const isAdmin = currentUser?.role === 'admin' || (currentUser?.email && (import.meta.env.VITE_ADMIN_EMAIL || 'calvinstarks666@gmail.com') === currentUser.email);
 
   return (
     <StoreContext.Provider value={{
