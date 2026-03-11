@@ -10,20 +10,16 @@ export default function Home() {
   const featuredProducts = products.filter(p => p.featured);
 
   return (
-    <div className="space-y-32 pb-32">
+    <div className="space-y-16 pb-16">
       <Hero />
 
       {/* Featured Products */}
-      <section className="max-w-7xl mx-auto px-6">
-        <div className="flex items-end justify-between mb-12">
+      <section className="max-w-7xl mx-auto px-6 py-8">
+        <div className="mb-8">
           <div className="space-y-2">
             <h2 className="text-4xl font-display font-bold">Featured <span className="text-gradient">Essentials</span></h2>
             <p className="text-primary">Handpicked quality for your everyday life.</p>
           </div>
-          <Link to="/shop" className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-primary hover:opacity-80 transition-colors group">
-            View All
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">

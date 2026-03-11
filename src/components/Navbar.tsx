@@ -60,35 +60,115 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
-          <button 
-            onClick={() => setIsSearchOpen(true)}
-            className="flex p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors"
-          >
-            <Search className="w-4 h-4 md:w-5 md:h-5" />
-          </button>
-          
-          <button 
-            onClick={toggleTheme}
-            className="flex p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors"
-            title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-          >
-            {theme === 'light' ? <Moon className="w-4 h-4 md:w-5 md:h-5" /> : <Sun className="w-4 h-4 md:w-5 md:h-5 text-primary" />}
-          </button>
+          {/* Desktop Actions */}
+          <div className="hidden lg:flex items-center gap-2 md:gap-4">
+            <button 
+              onClick={() => setIsSearchOpen(true)}
+              className="p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors"
+            >
+              <Search className="w-4 h-4 md:w-5 md:h-5" />
+            </button>
+            
+            <button 
+              onClick={toggleTheme}
+              className="p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors"
+              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            >
+              {theme === 'light' ? <Moon className="w-4 h-4 md:w-5 md:h-5" /> : <Sun className="w-4 h-4 md:w-5 md:h-5 text-primary" />}
+            </button>
 
-          {currentUser && (
-            <div className="relative block">
+            {currentUser && (
+              <div className="relative">
+                <button 
+                  onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                  className="p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors relative"
+                >
+                  <Bell className="w-4 h-4 md:w-5 md:h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 w-3 h-3 md:w-4 md:h-4 bg-red-500 text-[6px] md:text-[8px] font-bold flex items-center justify-center rounded-full border-2 border-bg-base text-white">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {isNotificationsOpen && (
+                    <>
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsNotificationsOpen(false)}
+                        className="fixed inset-0 z-[-1]"
+                      />
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 mt-4 w-80 glass-card p-4 shadow-2xl z-50 overflow-hidden"
+                      >
+                        <div className="flex items-center justify-between mb-4 px-2">
+                          <h4 className="text-xs font-bold uppercase tracking-widest opacity-40">Notifications</h4>
+                          {unreadCount > 0 && (
+                            <span className="text-[10px] font-bold text-primary">{unreadCount} New</span>
+                          )}
+                        </div>
+                        <div className="space-y-2 max-h-96 overflow-y-auto custom-scrollbar pr-2">
+                          {userNotifications.length === 0 ? (
+                            <p className="text-center py-8 text-xs opacity-30 italic">No notifications yet</p>
+                          ) : (
+                            userNotifications.map((n) => (
+                              <button
+                                key={n.id}
+                                onClick={() => handleNotificationClick(n)}
+                                className={`w-full text-left p-3 rounded-xl transition-all border border-transparent hover:border-primary/20 ${n.isRead ? 'opacity-50 bg-white/5' : 'bg-primary/5 border-primary/10'}`}
+                              >
+                                <div className="flex justify-between items-start gap-2">
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-1">{n.title}</p>
+                                  {!n.isRead && <div className="w-2 h-2 rounded-full bg-primary mt-1" />}
+                                </div>
+                                <p className="text-xs opacity-80 line-clamp-2">{n.message}</p>
+                                <p className="text-[8px] opacity-30 mt-2 uppercase tracking-tighter">
+                                  {new Date(n.createdAt).toLocaleString()}
+                                </p>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Actions - Fixed Top Right */}
+          <div className="lg:hidden fixed top-12 right-4 z-[70] flex items-center gap-2">
+            <button 
+              onClick={() => setIsSearchOpen(true)}
+              className="p-2.5 glass rounded-full shadow-2xl border border-primary/20"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+            <button 
+              onClick={toggleTheme}
+              className="p-2.5 glass rounded-full shadow-2xl border border-primary/20"
+            >
+              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-primary" />}
+            </button>
+            <div className="relative">
               <button 
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className="p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors relative"
+                className="p-2.5 glass rounded-full shadow-2xl border border-primary/20 relative"
               >
-                <Bell className="w-4 h-4 md:w-5 md:h-5" />
+                <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 w-3 h-3 md:w-4 md:h-4 bg-red-500 text-[6px] md:text-[8px] font-bold flex items-center justify-center rounded-full border-2 border-bg-base text-white">
+                  <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 text-[8px] font-bold flex items-center justify-center rounded-full border border-white text-white">
                     {unreadCount}
                   </span>
                 )}
               </button>
-
               <AnimatePresence>
                 {isNotificationsOpen && (
                   <>
@@ -97,13 +177,13 @@ export default function Navbar() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       onClick={() => setIsNotificationsOpen(false)}
-                      className="fixed inset-0 z-[-1]"
+                      className="fixed inset-0 z-[-1] bg-black/20 backdrop-blur-sm"
                     />
                     <motion.div 
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-4 w-[calc(100vw-4rem)] sm:w-80 glass-card p-4 shadow-2xl z-50 overflow-hidden"
+                      className="absolute right-0 mt-4 w-[calc(100vw-2rem)] glass-card p-4 shadow-2xl z-50 overflow-hidden"
                     >
                       <div className="flex items-center justify-between mb-4 px-2">
                         <h4 className="text-xs font-bold uppercase tracking-widest opacity-40">Notifications</h4>
@@ -111,7 +191,7 @@ export default function Navbar() {
                           <span className="text-[10px] font-bold text-primary">{unreadCount} New</span>
                         )}
                       </div>
-                      <div className="space-y-2 max-h-96 overflow-y-auto custom-scrollbar pr-2">
+                      <div className="space-y-2 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
                         {userNotifications.length === 0 ? (
                           <p className="text-center py-8 text-xs opacity-30 italic">No notifications yet</p>
                         ) : (
@@ -138,7 +218,50 @@ export default function Navbar() {
                 )}
               </AnimatePresence>
             </div>
-          )}
+            
+            <div className="relative">
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="p-2.5 glass rounded-full shadow-2xl border border-primary/20"
+              >
+                <Menu className="w-4 h-4" />
+              </button>
+
+              <AnimatePresence>
+                {isMenuOpen && (
+                  <>
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => setIsMenuOpen(false)}
+                      className="fixed inset-0 z-[-1] bg-black/20 backdrop-blur-sm"
+                    />
+                    <motion.div 
+                      initial={{ opacity: 0, x: 20, scale: 0.95 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: 20, scale: 0.95 }}
+                      className="absolute right-0 mt-4 w-64 glass-card p-4 shadow-2xl z-50 overflow-hidden"
+                    >
+                      <div className="flex flex-col gap-2">
+                        {menuItems.map((item) => (
+                          <Link
+                            key={item.path}
+                            to={item.path}
+                            onClick={() => setIsMenuOpen(false)}
+                            className="px-4 py-3 rounded-2xl text-sm font-bold uppercase tracking-widest hover:bg-primary/10 transition-colors flex items-center justify-between group"
+                          >
+                            <span className="group-hover:text-primary transition-colors">{item.label}</span>
+                            <Anchor className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0 text-primary" />
+                          </Link>
+                        ))}
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
 
           <Link to={currentUser ? "/profile" : "/login"} className="hidden lg:flex items-center gap-1 md:gap-2 p-1 md:p-1.5 hover:bg-primary/10 rounded-full transition-colors">
             {currentUser?.avatar ? (

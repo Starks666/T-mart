@@ -6,7 +6,7 @@ const MotionLink = motion.create(Link);
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-32 md:pt-40 overflow-hidden bg-bg-base">
+    <section className="relative min-h-[80vh] flex items-center justify-center pt-20 md:pt-24 overflow-hidden bg-bg-base">
       {/* Background Trident */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <Anchor className="w-[300px] h-[300px] md:w-[600px] md:h-[600px] text-red-600/5 -rotate-12" />
@@ -69,7 +69,7 @@ export default function Hero() {
           </MotionLink>
           
           <MotionLink 
-            to="/about" 
+            to="/login" 
             whileHover={{ 
               scale: 1.02, 
               backgroundColor: "rgba(166, 93, 104, 0.1)",
@@ -78,7 +78,21 @@ export default function Hero() {
             whileTap={{ scale: 0.98 }}
             className="btn-outline px-8 md:px-10 py-3 md:py-4 transition-all duration-300 text-sm md:text-base"
           >
-            Our Story
+            Login / Sign up
+          </MotionLink>
+
+          <MotionLink 
+            to="/shop" 
+            whileHover={{ 
+              scale: 1.02, 
+              backgroundColor: "rgba(166, 93, 104, 0.1)",
+              borderColor: "rgba(166, 93, 104, 0.5)"
+            }}
+            whileTap={{ scale: 0.98 }}
+            className="btn-outline px-8 md:px-10 py-3 md:py-4 transition-all duration-300 text-sm md:text-base flex items-center gap-2"
+          >
+            View All
+            <ArrowRight className="w-4 h-4" />
           </MotionLink>
         </motion.div>
       </div>

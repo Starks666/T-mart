@@ -10,21 +10,8 @@ export default function MobileNav() {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollHeight = document.documentElement.scrollHeight;
-      const scrollTop = document.documentElement.scrollTop;
-      const clientHeight = document.documentElement.clientHeight;
-      
-      // If we are within 50px of the bottom, hide the menu
-      if (scrollTop + clientHeight >= scrollHeight - 50) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Always visible bottom menu as per common user expectation for "working"
+    setIsVisible(true);
   }, []);
 
   const navItems = [
@@ -37,12 +24,11 @@ export default function MobileNav() {
   return (
     <AnimatePresence>
       {isVisible && (
-        <div className="lg:hidden fixed bottom-6 left-6 right-6 z-50">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-bg-base/80 backdrop-blur-xl border-t border-primary/10 pb-safe">
           <motion.div 
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            className="glass rounded-full px-6 py-3 flex items-center justify-between shadow-2xl border border-primary/10"
+            initial={{ y: 100 }}
+            animate={{ y: 0 }}
+            className="flex items-center justify-around px-2 py-3"
           >
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
@@ -52,10 +38,10 @@ export default function MobileNav() {
                 <Link 
                   key={item.path}
                   to={item.path}
-                  className={`relative flex flex-col items-center gap-1 transition-colors ${isActive ? 'text-primary' : 'opacity-40 hover:opacity-100'}`}
+                  className={`relative flex flex-col items-center gap-1 flex-1 transition-all ${isActive ? 'text-primary' : 'opacity-40 hover:opacity-100'}`}
                 >
                   <Icon className="w-5 h-5" />
-                  <span className="text-[8px] font-bold uppercase tracking-tighter">{item.label}</span>
+                  <span className="text-[9px] font-bold uppercase tracking-tighter">{item.label}</span>
                   {isActive && (
                     <motion.div 
                       layoutId="activeTab"
@@ -68,17 +54,17 @@ export default function MobileNav() {
             
             <button 
               onClick={() => setIsCartOpen(true)}
-              className="relative flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-opacity"
+              className="relative flex flex-col items-center gap-1 flex-1 opacity-40 hover:opacity-100 transition-opacity"
             >
               <div className="relative">
                 <ShoppingCart className="w-5 h-5" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary text-[6px] font-bold flex items-center justify-center rounded-full text-white border border-bg-base">
+                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-primary text-[7px] font-bold flex items-center justify-center rounded-full text-white border border-bg-base">
                     {cartCount}
                   </span>
                 )}
               </div>
-              <span className="text-[8px] font-bold uppercase tracking-tighter">Cart</span>
+              <span className="text-[9px] font-bold uppercase tracking-tighter">Cart</span>
             </button>
           </motion.div>
         </div>
