@@ -83,16 +83,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (dbUsers && dbUsers.length > 0) {
           setUsers(dbUsers);
         } else {
-          const adminUser: User = {
-            id: 'admin-1',
-            name: 'Admin User',
-            email: import.meta.env.VITE_ADMIN_EMAIL || 'fahimfahim27122003@gmail.com',
-            password: 'admin',
-            role: 'admin',
-            joinedAt: new Date().toISOString()
-          };
-          await supabaseService.updateProfile(adminUser.id, adminUser);
-          setUsers([adminUser]);
+          // No users in DB, system is fresh
+          setUsers([]);
         }
       } catch (error) {
         console.error('Failed to load data from Supabase:', error);
@@ -305,9 +297,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const login = (email: string, password: string) => {
     const user = users.find(u => u.email === email && u.password === password);
     if (user) {
-      const adminEmails = ['fahimfahim27122003@gmail.com', 'calvinstarks666@gmail.com'];
-      const updatedUser = (adminEmails.includes(user.email)) ? { ...user, role: 'admin' as const } : user;
-      setCurrentUser(updatedUser);
+      setCurrentUser(user);
       toast.success(`Welcome back, ${user.name}!`);
       return true;
     }
@@ -316,11 +306,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   };
 
   const signup = async (userData: Omit<User, 'id' | 'role' | 'joinedAt'>) => {
-    const adminEmails = ['fahimfahim27122003@gmail.com', 'calvinstarks666@gmail.com'];
     const newUser: User = {
       ...userData,
       id: Math.random().toString(36).substr(2, 9),
-      role: (adminEmails.includes(userData.email)) ? 'admin' : 'user',
+      role: 'user', // Default role is always user
       joinedAt: new Date().toISOString()
     };
     
@@ -342,11 +331,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const updateCurrentUser = async (updates: Partial<User>) => {
     if (!currentUser) return;
-    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'fahimfahim27122003@gmail.com';
     const updatedUser = { 
       ...currentUser, 
-      ...updates,
-      role: (updates.email === adminEmail || currentUser.email === adminEmail) ? 'admin' : currentUser.role
+      ...updates
     };
 
     try {
@@ -504,8 +491,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const cartTotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  const isAdmin = currentUser?.role === 'admin' || 
-    (currentUser?.email && ['fahimfahim27122003@gmail.com', 'calvinstarks666@gmail.com'].includes(currentUser.email));
+  const isAdmin = currentUser?.role === 'admin';
 
   const updateUserRole = async (userId: string, role: 'user' | 'admin') => {
     try {

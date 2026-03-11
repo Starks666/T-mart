@@ -457,9 +457,9 @@ export default function Admin() {
                             </button>
                             <button 
                               onClick={() => updateUserRole(user.id, 'user')}
-                              disabled={user.role === 'user' || ['fahimfahim27122003@gmail.com', 'calvinstarks666@gmail.com'].includes(user.email)}
+                              disabled={user.role === 'user'}
                               className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-lg border border-red-500/20 transition-all ${
-                                user.role === 'user' || ['fahimfahim27122003@gmail.com', 'calvinstarks666@gmail.com'].includes(user.email) ? 'opacity-30 cursor-not-allowed' : 'hover:bg-red-500/10 text-red-400'
+                                user.role === 'user' ? 'opacity-30 cursor-not-allowed' : 'hover:bg-red-500/10 text-red-400'
                               }`}
                             >
                               Make User
