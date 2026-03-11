@@ -314,7 +314,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     };
     
     try {
-      await supabaseService.updateProfile(newUser.id, newUser);
+      await supabaseService.createProfile(newUser);
       setUsers(prev => [...prev, newUser]);
       setCurrentUser(newUser);
       toast.success('Account created successfully!');

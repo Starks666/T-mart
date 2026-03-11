@@ -46,6 +46,12 @@ export const supabaseService = {
     return data as User[];
   },
 
+  async createProfile(user: User) {
+    const { data, error } = await supabase.from('profiles').insert(user).select();
+    if (error) throw error;
+    return data[0] as User;
+  },
+
   async updateProfile(id: string, updates: Partial<User>) {
     const { data, error } = await supabase.from('profiles').upsert({ id, ...updates }).select();
     if (error) throw error;
