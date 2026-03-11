@@ -35,6 +35,7 @@ interface StoreContextType {
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
   isAdmin: boolean;
+  isLoading: boolean;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -50,13 +51,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   });
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [users, setUsers] = useState<User[]>(() => {
     const saved = localStorage.getItem('tmart_users');
     return saved ? JSON.parse(saved) : [
       {
         id: 'admin-1',
         name: 'Admin User',
-        email: import.meta.env.VITE_ADMIN_EMAIL || 'admin@example.com',
+        email: import.meta.env.VITE_ADMIN_EMAIL || 'fahimfahim27122003@gmail.com',
         password: 'admin',
         role: 'admin',
         joinedAt: new Date().toISOString()
@@ -117,6 +119,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem('tmart_notifications', JSON.stringify(notifications));
   }, [notifications]);
+
+  useEffect(() => {
+    // Simulate loading
+    const timer = setTimeout(() => setIsLoading(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const addToCart = (product: Product, quantity: number = 1) => {
     setCart(prev => {
@@ -246,8 +254,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const login = (email: string, password: string) => {
     const user = users.find(u => u.email === email && u.password === password);
     if (user) {
-      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
-      const updatedUser = (adminEmail && user.email === adminEmail) ? { ...user, role: 'admin' as const } : user;
+      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'fahimfahim27122003@gmail.com';
+      const updatedUser = (user.email === adminEmail) ? { ...user, role: 'admin' as const } : user;
       setCurrentUser(updatedUser);
       toast.success(`Welcome back, ${user.name}!`);
       return true;
@@ -257,11 +265,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   };
 
   const signup = (userData: Omit<User, 'id' | 'role' | 'joinedAt'>) => {
-    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'fahimfahim27122003@gmail.com';
     const newUser: User = {
       ...userData,
       id: Math.random().toString(36).substr(2, 9),
-      role: (adminEmail && userData.email === adminEmail) ? 'admin' : 'user',
+      role: (userData.email === adminEmail) ? 'admin' : 'user',
       joinedAt: new Date().toISOString()
     };
     setUsers(prev => [...prev, newUser]);
@@ -276,11 +284,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const updateCurrentUser = (updates: Partial<User>) => {
     if (!currentUser) return;
-    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'fahimfahim27122003@gmail.com';
     const updatedUser = { 
       ...currentUser, 
       ...updates,
-      role: (adminEmail && (updates.email === adminEmail || currentUser.email === adminEmail)) ? 'admin' : currentUser.role
+      role: (updates.email === adminEmail || currentUser.email === adminEmail) ? 'admin' : currentUser.role
     };
     setCurrentUser(updatedUser);
     setUsers(prev => prev.map(u => u.id === currentUser.id ? updatedUser : u));
@@ -384,7 +392,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const cartTotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  const isAdmin = currentUser?.role === 'admin' || (currentUser?.email && import.meta.env.VITE_ADMIN_EMAIL && currentUser.email === import.meta.env.VITE_ADMIN_EMAIL);
+  const isAdmin = currentUser?.role === 'admin' || (currentUser?.email && (import.meta.env.VITE_ADMIN_EMAIL || 'fahimfahim27122003@gmail.com') === currentUser.email);
 
   return (
     <StoreContext.Provider value={{
@@ -418,7 +426,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       cartCount,
       isCartOpen,
       setIsCartOpen,
-      isAdmin
+      isAdmin,
+      isLoading
     }}>
       {children}
     </StoreContext.Provider>
