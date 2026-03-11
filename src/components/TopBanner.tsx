@@ -6,7 +6,7 @@ export default function TopBanner() {
     <motion.div 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="fixed top-0 left-0 right-0 bg-primary text-bg-base py-2 px-4 flex items-center justify-center gap-2 md:gap-4 text-[10px] md:text-[11px] font-bold uppercase tracking-[0.1em] md:tracking-[0.2em] z-[60]"
+      className="fixed top-0 left-0 right-0 bg-primary text-bg-base py-2 px-4 flex items-center justify-center gap-2 md:gap-4 text-[9px] md:text-[11px] font-bold uppercase tracking-[0.1em] md:tracking-[0.2em] z-[60]"
     >
       <Sparkles className="w-2.5 h-2.5 md:w-3 md:h-3" />
       <span className="whitespace-nowrap">Free shipping on all orders over ৳15,000</span>

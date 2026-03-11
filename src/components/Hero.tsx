@@ -6,14 +6,14 @@ const MotionLink = motion.create(Link);
 
 export default function Hero() {
   return (
-    <section className="relative min-h-[80vh] flex items-center justify-center pt-20 md:pt-24 overflow-hidden bg-bg-base">
+    <section className="relative min-h-[90vh] flex items-center justify-center pt-32 md:pt-40 overflow-hidden bg-bg-base">
       {/* Background Trident */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <Anchor className="w-[300px] h-[300px] md:w-[600px] md:h-[600px] text-red-600/5 -rotate-12" />
       </div>
 
       {/* New Collection Button - Top Left */}
-      <div className="absolute top-24 md:top-32 left-1/2 -translate-x-1/2 md:left-12 md:translate-x-0 z-20">
+      <div className="absolute top-36 md:top-40 left-1/2 -translate-x-1/2 md:left-12 md:translate-x-0 z-20">
         <MotionLink
           to="/shop"
           initial={{ opacity: 0, x: -20 }}
@@ -32,7 +32,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-4xl md:text-8xl font-display font-bold tracking-tight mb-6 md:mb-8 leading-[1.1]"
+          className="text-4xl md:text-8xl font-display font-bold tracking-tight mb-4 md:mb-8 leading-[1.1]"
         >
           Simple. Elegant. <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/70 to-primary">Timeless.</span>

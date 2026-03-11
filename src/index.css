@@ -47,10 +47,9 @@
 }
 
 @utility glass {
-  background-color: var(--bg-base);
-  opacity: 0.8;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  background-color: color-mix(in srgb, var(--bg-base), transparent 20%);
+  backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--text-base), transparent 90%);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
 
