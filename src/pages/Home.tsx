@@ -18,9 +18,9 @@ export default function Home() {
         <div className="flex items-end justify-between mb-12">
           <div className="space-y-2">
             <h2 className="text-4xl font-display font-bold">Featured <span className="text-gradient">Essentials</span></h2>
-            <p className="text-black/50">Handpicked quality for your everyday life.</p>
+            <p className="text-primary">Handpicked quality for your everyday life.</p>
           </div>
-          <Link to="/shop" className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-black hover:text-primary transition-colors group">
+          <Link to="/shop" className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-primary hover:opacity-80 transition-colors group">
             View All
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
@@ -52,14 +52,14 @@ export default function Home() {
               </span>
               <span>Community</span>
             </h2>
-            <p className="text-black/60 max-w-xl mx-auto">
+            <p className="text-primary max-w-xl mx-auto">
               Get updates on new arrivals, exclusive offers, and minimalist living tips.
             </p>
             <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto" onSubmit={(e) => e.preventDefault()}>
               <input 
                 type="email" 
                 placeholder="Enter your email" 
-                className="flex-1 px-6 py-4 rounded-lg border border-black/10 focus:outline-none focus:border-black transition-colors"
+                className="flex-1 px-6 py-4 rounded-lg border border-black/10 dark:border-white/10 focus:outline-none focus:border-black dark:focus:border-white bg-transparent transition-colors"
               />
               <button className="btn-primary whitespace-nowrap">Subscribe</button>
             </form>

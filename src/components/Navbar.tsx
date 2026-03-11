@@ -6,11 +6,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
 export default function Navbar() {
-  const { cartCount, setIsCartOpen, currentUser, notifications, markNotificationAsRead, isAdmin } = useStore();
+  const { cartCount, setIsCartOpen, currentUser, notifications, markNotificationAsRead, isAdmin, products } = useStore();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const userNotifications = notifications.filter(n => n.userId === currentUser?.id);
   const unreadCount = userNotifications.filter(n => !n.isRead).length;
@@ -30,8 +32,16 @@ export default function Navbar() {
     ...(isAdmin ? [{ label: 'Admin', path: '/admin' }] : []),
   ];
 
+  const filteredProducts = searchQuery.trim() === '' 
+    ? [] 
+    : products.filter(p => 
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        p.category.toLowerCase().includes(searchQuery.toLowerCase())
+      ).slice(0, 5);
+
   return (
-    <motion.nav 
+    <>
+      <motion.nav 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       className="fixed top-10 md:top-12 left-0 right-0 z-40 px-4 md:px-6 py-2 md:py-4"
@@ -50,20 +60,23 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
-          <button className="hidden lg:flex p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors">
+          <button 
+            onClick={() => setIsSearchOpen(true)}
+            className="flex p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors"
+          >
             <Search className="w-4 h-4 md:w-5 md:h-5" />
           </button>
           
           <button 
             onClick={toggleTheme}
-            className="hidden lg:flex p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors"
+            className="flex p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors"
             title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
           >
             {theme === 'light' ? <Moon className="w-4 h-4 md:w-5 md:h-5" /> : <Sun className="w-4 h-4 md:w-5 md:h-5 text-primary" />}
           </button>
 
           {currentUser && (
-            <div className="relative hidden lg:block">
+            <div className="relative block">
               <button 
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                 className="p-1.5 md:p-2 hover:bg-primary/10 rounded-full transition-colors relative"
@@ -90,7 +103,7 @@ export default function Navbar() {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-4 w-80 glass-card p-4 shadow-2xl z-50 overflow-hidden"
+                      className="absolute right-0 mt-4 w-[calc(100vw-4rem)] sm:w-80 glass-card p-4 shadow-2xl z-50 overflow-hidden"
                     >
                       <div className="flex items-center justify-between mb-4 px-2">
                         <h4 className="text-xs font-bold uppercase tracking-widest opacity-40">Notifications</h4>
@@ -201,6 +214,94 @@ export default function Navbar() {
           </div>
         </div>
       </div>
-    </motion.nav>
+      </motion.nav>
+
+      {/* Search Modal */}
+      <AnimatePresence>
+        {isSearchOpen && (
+          <div className="fixed inset-0 z-[100] flex items-start justify-center pt-20 px-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSearchOpen(false)}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              className="relative w-full max-w-2xl glass-card p-4 md:p-6 shadow-2xl overflow-hidden"
+            >
+              <div className="relative flex items-center gap-4 mb-6">
+                <Search className="w-5 h-5 opacity-40" />
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Search products, categories..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 bg-transparent border-none outline-none text-lg md:text-xl font-medium placeholder:opacity-30"
+                />
+                <button 
+                  onClick={() => setIsSearchOpen(false)}
+                  className="text-[10px] font-bold uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {searchQuery.trim() !== '' && (
+                  <div>
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-4">Results</h4>
+                    {filteredProducts.length === 0 ? (
+                      <p className="text-sm opacity-40 italic py-4">No products found matching "{searchQuery}"</p>
+                    ) : (
+                      <div className="grid gap-2">
+                        {filteredProducts.map(product => (
+                          <Link
+                            key={product.id}
+                            to={`/product/${product.id}`}
+                            onClick={() => setIsSearchOpen(false)}
+                            className="flex items-center gap-4 p-2 rounded-2xl hover:bg-primary/5 transition-colors group"
+                          >
+                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-black/5">
+                              <img src={product.image} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-bold group-hover:text-primary transition-colors">{product.name}</p>
+                              <p className="text-[10px] opacity-40 uppercase tracking-widest">{product.category}</p>
+                            </div>
+                            <p className="text-sm font-bold">৳{product.price.toLocaleString()}</p>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {searchQuery.trim() === '' && (
+                  <div>
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-4">Popular Categories</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {['Watches', 'Jewelry', 'Bags', 'Accessories'].map(cat => (
+                        <button
+                          key={cat}
+                          onClick={() => setSearchQuery(cat)}
+                          className="px-4 py-2 rounded-full border border-primary/10 hover:border-primary/30 hover:bg-primary/5 transition-all text-xs font-medium"
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

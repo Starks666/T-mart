@@ -19,7 +19,7 @@ export default function FloatingCart() {
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => setIsCartOpen(true)}
-          className="fixed bottom-8 right-8 z-50 p-4 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center group"
+          className="fixed bottom-24 lg:bottom-8 right-6 lg:right-8 z-50 p-4 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center group"
         >
           <ShoppingCart className="w-6 h-6" />
           <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-bg-base text-white">
