@@ -9,7 +9,7 @@ import { Order, Product, Question } from '../types';
 
 export default function Admin() {
   const navigate = useNavigate();
-  const { products, addProduct, updateProduct, deleteProduct, orders, updateOrderStatus, completeRefund, answerQuestion, currentUser, isAdmin } = useStore();
+  const { products, addProduct, updateProduct, deleteProduct, orders, updateOrderStatus, completeRefund, answerQuestion, currentUser, isAdmin, users, updateUserRole } = useStore();
   
   React.useEffect(() => {
     if (!isAdmin) {
@@ -18,7 +18,7 @@ export default function Admin() {
   }, [isAdmin, navigate]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'inventory' | 'revenue' | 'orders' | 'customers' | 'refunds'>('inventory');
+  const [activeTab, setActiveTab] = useState<'inventory' | 'revenue' | 'orders' | 'customers' | 'refunds' | 'users'>('inventory');
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [selectedOrderForDetails, setSelectedOrderForDetails] = useState<Order | null>(null);
   const [replyingTo, setReplyingTo] = useState<{ productId: string, question: Question } | null>(null);
@@ -94,6 +94,7 @@ export default function Admin() {
     { id: 'orders', label: 'Active Orders', value: orders.length.toString(), change: '+3', icon: ShoppingCart, color: 'text-primary' },
     { id: 'inventory', label: 'Total Products', value: products.length.toString(), change: '0', icon: Package, color: 'text-secondary' },
     { id: 'customers', label: 'New Customers', value: uniqueCustomers.length.toString(), change: '+18%', icon: Users, color: 'text-accent' },
+    { id: 'users', label: 'Manage Roles', value: users.length.toString(), change: 'Admin Access', icon: Users, color: 'text-purple-400' },
     { id: 'refunds', label: 'Refunds/Cancels', value: (refundRequestsCount + cancelledOrdersCount).toString(), change: refundRequestsCount > 0 ? 'Action Required' : '0', icon: AlertCircle, color: 'text-red-400' },
   ];
 
@@ -409,6 +410,64 @@ export default function Admin() {
                         <td colSpan={3} className="px-6 py-12 text-center opacity-30">No customers found.</td>
                       </tr>
                     )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'users' && (
+            <>
+              <div className="p-6 border-b border-primary/10">
+                <h3 className="font-display font-bold text-xl">User Role Management</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="text-[10px] font-bold uppercase tracking-widest opacity-30 border-b border-primary/5">
+                      <th className="px-6 py-4">User</th>
+                      <th className="px-6 py-4">Current Role</th>
+                      <th className="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm">
+                    {users.map((user) => (
+                      <tr key={user.id} className="border-b border-primary/5 hover:bg-primary/5 transition-colors">
+                        <td className="px-6 py-4">
+                          <p className="font-medium">{user.name}</p>
+                          <p className="text-[10px] opacity-50">{user.email}</p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                            user.role === 'admin' ? 'bg-purple-500/10 text-purple-500' : 'bg-white/10 text-white/50'
+                          }`}>
+                            {user.role}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button 
+                              onClick={() => updateUserRole(user.id, 'admin')}
+                              disabled={user.role === 'admin'}
+                              className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-lg border border-primary/20 transition-all ${
+                                user.role === 'admin' ? 'opacity-30 cursor-not-allowed' : 'hover:bg-primary/10 text-primary'
+                              }`}
+                            >
+                              Make Admin
+                            </button>
+                            <button 
+                              onClick={() => updateUserRole(user.id, 'user')}
+                              disabled={user.role === 'user' || ['fahimfahim27122003@gmail.com', 'calvinstarks666@gmail.com'].includes(user.email)}
+                              className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-lg border border-red-500/20 transition-all ${
+                                user.role === 'user' || ['fahimfahim27122003@gmail.com', 'calvinstarks666@gmail.com'].includes(user.email) ? 'opacity-30 cursor-not-allowed' : 'hover:bg-red-500/10 text-red-400'
+                              }`}
+                            >
+                              Make User
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>

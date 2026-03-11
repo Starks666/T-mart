@@ -24,6 +24,7 @@ interface StoreContextType {
   signup: (user: Omit<User, 'id' | 'role' | 'joinedAt'>) => void;
   logout: () => void;
   updateCurrentUser: (updates: Partial<User>) => void;
+  updateUserRole: (userId: string, role: 'user' | 'admin') => void;
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
   requestRefund: (orderId: string, refundData: { reason: string; bankDetails: string }) => void;
   completeRefund: (orderId: string) => void;
@@ -85,7 +86,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           const adminUser: User = {
             id: 'admin-1',
             name: 'Admin User',
-            email: import.meta.env.VITE_ADMIN_EMAIL || 'calvinstarks666@gmail.com',
+            email: import.meta.env.VITE_ADMIN_EMAIL || 'fahimfahim27122003@gmail.com',
             password: 'admin',
             role: 'admin',
             joinedAt: new Date().toISOString()
@@ -304,8 +305,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const login = (email: string, password: string) => {
     const user = users.find(u => u.email === email && u.password === password);
     if (user) {
-      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'calvinstarks666@gmail.com';
-      const updatedUser = (user.email === adminEmail) ? { ...user, role: 'admin' as const } : user;
+      const adminEmails = ['fahimfahim27122003@gmail.com', 'calvinstarks666@gmail.com'];
+      const updatedUser = (adminEmails.includes(user.email)) ? { ...user, role: 'admin' as const } : user;
       setCurrentUser(updatedUser);
       toast.success(`Welcome back, ${user.name}!`);
       return true;
@@ -315,11 +316,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   };
 
   const signup = async (userData: Omit<User, 'id' | 'role' | 'joinedAt'>) => {
-    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'calvinstarks666@gmail.com';
+    const adminEmails = ['fahimfahim27122003@gmail.com', 'calvinstarks666@gmail.com'];
     const newUser: User = {
       ...userData,
       id: Math.random().toString(36).substr(2, 9),
-      role: (userData.email === adminEmail) ? 'admin' : 'user',
+      role: (adminEmails.includes(userData.email)) ? 'admin' : 'user',
       joinedAt: new Date().toISOString()
     };
     
@@ -341,7 +342,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const updateCurrentUser = async (updates: Partial<User>) => {
     if (!currentUser) return;
-    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'calvinstarks666@gmail.com';
+    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'fahimfahim27122003@gmail.com';
     const updatedUser = { 
       ...currentUser, 
       ...updates,
@@ -503,7 +504,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const cartTotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  const isAdmin = currentUser?.role === 'admin' || (currentUser?.email && (import.meta.env.VITE_ADMIN_EMAIL || 'calvinstarks666@gmail.com') === currentUser.email);
+  const isAdmin = currentUser?.role === 'admin' || 
+    (currentUser?.email && ['fahimfahim27122003@gmail.com', 'calvinstarks666@gmail.com'].includes(currentUser.email));
+
+  const updateUserRole = async (userId: string, role: 'user' | 'admin') => {
+    try {
+      await supabaseService.updateProfile(userId, { role });
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role } : u));
+      if (currentUser?.id === userId) {
+        setCurrentUser(prev => prev ? { ...prev, role } : null);
+      }
+      toast.success(`User role updated to ${role}`);
+    } catch (error) {
+      console.error('Failed to update user role:', error);
+      toast.error('Failed to update user role in database');
+    }
+  };
 
   return (
     <StoreContext.Provider value={{
@@ -526,6 +542,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       signup,
       logout,
       updateCurrentUser,
+      updateUserRole,
       updateOrderStatus,
       requestRefund,
       completeRefund,
