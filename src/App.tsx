@@ -19,7 +19,7 @@ import { motion } from 'motion/react';
 import { Anchor } from 'lucide-react';
 
 function AppContent() {
-  const { isLoading } = useStore();
+  const { isLoading, isAdmin } = useStore();
 
   if (isLoading) {
     return (
@@ -107,7 +107,7 @@ function AppContent() {
                 <li><Link to="/shop" className="hover:text-primary transition-colors">All Products</Link></li>
                 <li><Link to="/" className="hover:text-primary transition-colors">Featured</Link></li>
                 <li><Link to="/shop" className="hover:text-primary transition-colors">New Arrivals</Link></li>
-                {useStore().isAdmin && (
+                {isAdmin && (
                   <li><Link to="/admin" className="hover:text-primary transition-colors">Admin Dashboard</Link></li>
                 )}
               </ul>

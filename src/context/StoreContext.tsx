@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { CartItem, Product, Order, User, Review, Question, Notification } from '../types';
 import { PRODUCTS as INITIAL_PRODUCTS } from '../data/mockData';
+import { supabaseService } from '../services/supabaseService';
 import toast from 'react-hot-toast';
 
 interface StoreContextType {
@@ -41,30 +42,12 @@ interface StoreContextType {
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('tmart_products');
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
-  });
-  const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem('tmart_orders');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [users, setUsers] = useState<User[]>(() => {
-    const saved = localStorage.getItem('tmart_users');
-    return saved ? JSON.parse(saved) : [
-      {
-        id: 'admin-1',
-        name: 'Admin User',
-        email: import.meta.env.VITE_ADMIN_EMAIL || 'fahimfahim27122003@gmail.com',
-        password: 'admin',
-        role: 'admin',
-        joinedAt: new Date().toISOString()
-      }
-    ];
-  });
+  const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const saved = localStorage.getItem('tmart_current_user');
     return saved ? JSON.parse(saved) : null;
@@ -74,12 +57,66 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Save products to localStorage
+  // Load data from Supabase on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [dbProducts, dbOrders, dbUsers] = await Promise.all([
+          supabaseService.getProducts(),
+          supabaseService.getOrders(),
+          supabaseService.getUsers()
+        ]);
+
+        if (dbProducts && dbProducts.length > 0) {
+          setProducts(dbProducts);
+        } else {
+          // If DB is empty, seed it with initial products
+          for (const p of INITIAL_PRODUCTS) {
+            await supabaseService.upsertProduct(p);
+          }
+          setProducts(INITIAL_PRODUCTS);
+        }
+
+        if (dbOrders) setOrders(dbOrders);
+        
+        if (dbUsers && dbUsers.length > 0) {
+          setUsers(dbUsers);
+        } else {
+          const adminUser: User = {
+            id: 'admin-1',
+            name: 'Admin User',
+            email: import.meta.env.VITE_ADMIN_EMAIL || 'fahimfahim27122003@gmail.com',
+            password: 'admin',
+            role: 'admin',
+            joinedAt: new Date().toISOString()
+          };
+          await supabaseService.updateProfile(adminUser.id, adminUser);
+          setUsers([adminUser]);
+        }
+      } catch (error) {
+        console.error('Failed to load data from Supabase:', error);
+        // Fallback to localStorage if Supabase fails
+        const savedProducts = localStorage.getItem('tmart_products');
+        const savedOrders = localStorage.getItem('tmart_orders');
+        const savedUsers = localStorage.getItem('tmart_users');
+        
+        if (savedProducts) setProducts(JSON.parse(savedProducts));
+        if (savedOrders) setOrders(JSON.parse(savedOrders));
+        if (savedUsers) setUsers(JSON.parse(savedUsers));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Save products to localStorage (as backup)
   useEffect(() => {
     localStorage.setItem('tmart_products', JSON.stringify(products));
   }, [products]);
 
-  // Save orders to localStorage
+  // Save orders to localStorage (as backup)
   useEffect(() => {
     localStorage.setItem('tmart_orders', JSON.stringify(orders));
   }, [orders]);
@@ -101,7 +138,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('tmart_cart', JSON.stringify(cart));
   }, [cart]);
 
-  // Save users to localStorage
+  // Save users to localStorage (as backup)
   useEffect(() => {
     localStorage.setItem('tmart_users', JSON.stringify(users));
   }, [users]);
@@ -119,12 +156,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem('tmart_notifications', JSON.stringify(notifications));
   }, [notifications]);
-
-  useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => setIsLoading(false), 1000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const addToCart = (product: Product, quantity: number = 1) => {
     setCart(prev => {
@@ -154,7 +185,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  const addProduct = (productData: Omit<Product, 'id'>) => {
+  const addProduct = async (productData: Omit<Product, 'id'>) => {
     const newProduct: Product = {
       ...productData,
       id: Math.random().toString(36).substr(2, 9),
@@ -166,18 +197,38 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
       featured: true
     };
-    setProducts(prev => [newProduct, ...prev]);
-    toast.success('Product added successfully');
+    
+    try {
+      await supabaseService.upsertProduct(newProduct);
+      setProducts(prev => [newProduct, ...prev]);
+      toast.success('Product added successfully');
+    } catch (error) {
+      console.error('Failed to add product to Supabase:', error);
+      toast.error('Failed to sync with database, but saved locally');
+      setProducts(prev => [newProduct, ...prev]);
+    }
   };
 
-  const updateProduct = (updatedProduct: Product) => {
-    setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
-    toast.success('Product updated successfully');
+  const updateProduct = async (updatedProduct: Product) => {
+    try {
+      await supabaseService.upsertProduct(updatedProduct);
+      setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+      toast.success('Product updated successfully');
+    } catch (error) {
+      console.error('Failed to update product in Supabase:', error);
+      toast.error('Failed to sync with database');
+    }
   };
 
-  const deleteProduct = (productId: string) => {
-    setProducts(prev => prev.filter(p => p.id !== productId));
-    toast.error('Product deleted');
+  const deleteProduct = async (productId: string) => {
+    try {
+      await supabaseService.deleteProduct(productId);
+      setProducts(prev => prev.filter(p => p.id !== productId));
+      toast.error('Product deleted');
+    } catch (error) {
+      console.error('Failed to delete product from Supabase:', error);
+      toast.error('Failed to delete from database');
+    }
   };
 
   const addReview = (productId: string, reviewData: Omit<Review, 'id' | 'createdAt'>) => {
@@ -225,7 +276,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('tmart_cart');
   };
 
-  const placeOrder = (customerData: any, paymentData?: any) => {
+  const placeOrder = async (customerData: any, paymentData?: any) => {
     const newOrder: Order = {
       id: `ORD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
       userId: currentUser?.id,
@@ -237,18 +288,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       payment: paymentData || { method: 'cod', status: 'pending' }
     };
 
-    // Decrease stock
-    setProducts(prev => prev.map(p => {
-      const cartItem = cart.find(item => item.id === p.id);
-      if (cartItem) {
-        return { ...p, stock: Math.max(0, p.stock - cartItem.quantity) };
+    try {
+      await supabaseService.createOrder(newOrder);
+      
+      // Decrease stock in Supabase
+      for (const item of cart) {
+        const product = products.find(p => p.id === item.id);
+        if (product) {
+          await supabaseService.upsertProduct({
+            ...product,
+            stock: Math.max(0, product.stock - item.quantity)
+          });
+        }
       }
-      return p;
-    }));
 
-    setOrders(prev => [newOrder, ...prev]);
-    clearCart();
-    toast.success('Order placed successfully!');
+      setOrders(prev => [newOrder, ...prev]);
+      clearCart();
+      toast.success('Order placed successfully!');
+    } catch (error) {
+      console.error('Failed to place order in Supabase:', error);
+      toast.error('Failed to sync order with database');
+    }
   };
 
   const login = (email: string, password: string) => {
