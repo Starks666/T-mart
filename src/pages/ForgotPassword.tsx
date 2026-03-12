@@ -26,11 +26,19 @@ export default function ForgotPassword() {
         body: JSON.stringify({ email })
       });
       
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error response:', errorText);
+        throw new Error(`Server error (${response.status}): ${errorText.substring(0, 50)}...`);
+      }
+
       let data;
+      const text = await response.text();
       try {
-        data = await response.json();
+        data = JSON.parse(text);
       } catch (e) {
-        throw new Error('Server returned an invalid response');
+        console.error('Invalid JSON response:', text);
+        throw new Error(`Server returned an invalid response format`);
       }
 
       if (data.success) {

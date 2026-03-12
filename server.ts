@@ -17,6 +17,7 @@ async function startServer() {
 
   // Verification Code Logic
   app.post("/api/auth/send-code", async (req, res) => {
+    console.log('Received request to /api/auth/send-code:', req.body);
     const { email } = req.body;
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -46,6 +47,7 @@ async function startServer() {
       
       console.log(`Verification code for ${email}: ${code}`);
       
+      res.setHeader('Content-Type', 'application/json');
       res.json({ 
         success: true, 
         message: resend ? "Verification code sent to your email!" : "Verification code generated (Check console)!",
@@ -53,6 +55,7 @@ async function startServer() {
       });
     } catch (error) {
       console.error('Auth API Error:', error);
+      res.setHeader('Content-Type', 'application/json');
       res.status(500).json({ success: false, message: "Internal server error" });
     }
   });
