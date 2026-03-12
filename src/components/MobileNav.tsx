@@ -8,11 +8,33 @@ export default function MobileNav() {
   const location = useLocation();
   const { cartCount, setIsCartOpen, currentUser } = useStore();
   const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
-    // Always visible bottom menu as per common user expectation for "working"
-    setIsVisible(true);
-  }, []);
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
+      
+      // Check if we are at the very bottom
+      const isAtBottom = currentScrollY + clientHeight >= scrollHeight - 50;
+
+      if (isAtBottom) {
+        setIsVisible(false);
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        // Scrolling down
+        setIsVisible(false);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
@@ -24,13 +46,14 @@ export default function MobileNav() {
   return (
     <AnimatePresence>
       {isVisible && (
-        <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md">
-          <motion.div 
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="glass rounded-3xl shadow-2xl border border-primary/10 flex items-center justify-around px-2 py-3"
-          >
-            {navItems.map((item) => {
+        <motion.div 
+          initial={{ y: 100, opacity: 0, x: '-50%' }}
+          animate={{ y: 0, opacity: 1, x: '-50%' }}
+          exit={{ y: 100, opacity: 0, x: '-50%' }}
+          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          className="lg:hidden fixed bottom-6 left-1/2 z-50 w-[90%] max-w-md glass rounded-3xl shadow-2xl border border-primary/10 flex items-center justify-around px-2 py-3"
+        >
+          {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               const Icon = item.icon;
               
@@ -67,8 +90,7 @@ export default function MobileNav() {
               <span className="text-[9px] font-bold uppercase tracking-tighter">Cart</span>
             </button>
           </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
   );
 }
