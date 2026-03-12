@@ -10,14 +10,23 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [sentCode, setSentCode] = useState(''); // For demo purposes
+  const [emailSent, setEmailSent] = useState(true);
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { resetPassword } = useStore();
+  const { resetPassword, users } = useStore();
   const navigate = useNavigate();
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if user exists locally first
+    const userExists = users.find(u => u.email === email);
+    if (!userExists) {
+      toast.error('No account found with this email address');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const response = await fetch('/api/auth/send-code', {
@@ -26,12 +35,6 @@ export default function ForgotPassword() {
         body: JSON.stringify({ email })
       });
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server error response:', errorText);
-        throw new Error(`Server error (${response.status}): ${errorText.substring(0, 50)}...`);
-      }
-
       let data;
       const text = await response.text();
       try {
@@ -43,8 +46,13 @@ export default function ForgotPassword() {
 
       if (data.success) {
         setSentCode(data.debugCode);
+        setEmailSent(data.emailSent);
         setStep(2);
-        toast.success(data.message);
+        if (data.emailSent) {
+          toast.success(data.message);
+        } else {
+          toast(data.message, { icon: '⚠️', duration: 6000 });
+        }
       } else {
         toast.error(data.message || 'Failed to send code');
       }
@@ -159,8 +167,8 @@ export default function ForgotPassword() {
                     placeholder="000000"
                   />
                 </div>
-                <p className="text-[10px] text-primary/60 text-center mt-2">
-                  Debug Hint: The code is {sentCode}
+                <p className={`text-[10px] text-center mt-2 ${!emailSent ? 'text-primary font-bold animate-pulse' : 'text-primary/60'}`}>
+                  {!emailSent ? '⚠️ Email failed. Use this code: ' : 'Debug Hint: The code is '} {sentCode}
                 </p>
               </div>
               <button

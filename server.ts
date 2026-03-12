@@ -22,6 +22,7 @@ async function startServer() {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
     try {
+      let emailSent = false;
       if (resend) {
         try {
           await resend.emails.send({
@@ -39,9 +40,9 @@ async function startServer() {
               </div>
             `
           });
+          emailSent = true;
         } catch (emailError) {
           console.error('Resend Email Error (Falling back to console):', emailError);
-          // Continue anyway so the user isn't blocked in demo/dev mode
         }
       }
       
@@ -50,8 +51,9 @@ async function startServer() {
       res.setHeader('Content-Type', 'application/json');
       res.json({ 
         success: true, 
-        message: resend ? "Verification code sent to your email!" : "Verification code generated (Check console)!",
-        debugCode: code
+        message: emailSent ? "Verification code sent to your email!" : "Email service unavailable. Use the debug code below.",
+        debugCode: code,
+        emailSent
       });
     } catch (error) {
       console.error('Auth API Error:', error);

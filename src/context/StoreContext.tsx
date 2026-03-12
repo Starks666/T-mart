@@ -349,7 +349,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return true;
     } catch (error) {
       console.error('Failed to reset password:', error);
-      toast.error('Failed to reset password. Please check your email.');
+      toast.error('Failed to update password in database');
       return false;
     }
   };
