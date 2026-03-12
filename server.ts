@@ -52,6 +52,31 @@ async function startServer() {
     }
   });
 
+  // bKash Payment Integration
+  app.post("/api/bkash/create", async (req, res) => {
+    const { amount, orderId } = req.body;
+    
+    // In a real app, you would call bKash Grant Token and Create Payment API here
+    // For now, we simulate the process
+    const merchantNumber = process.env.BKASH_MERCHANT_NUMBER || "+8801630989302";
+    
+    res.json({
+      success: true,
+      paymentID: `BK-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+      bkashURL: `/bkash-mock-payment?amount=${amount}&orderId=${orderId}&merchant=${encodeURIComponent(merchantNumber)}`
+    });
+  });
+
+  app.post("/api/bkash/execute", async (req, res) => {
+    const { paymentID } = req.body;
+    // Simulate successful execution
+    res.json({
+      success: true,
+      trxID: `TRX${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
+      status: 'Completed'
+    });
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

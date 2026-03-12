@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { ShoppingCart, Search, User, Menu, Anchor, Sun, Moon, Bell, Check } from 'lucide-react';
+import { ShoppingCart, Search, User, Menu, Anchor, Sun, Moon, Bell, Check, Home, ShoppingBag, LayoutGrid, Info, ShieldCheck } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { useTheme } from '../context/ThemeContext';
 import { Link, useNavigate } from 'react-router-dom';
@@ -24,12 +24,12 @@ export default function Navbar() {
   };
 
   const menuItems = [
-    { label: 'Home', path: '/' },
-    { label: 'My Profile', path: currentUser ? '/profile' : '/login' },
-    { label: 'Shop', path: '/shop' },
-    { label: 'Categories', path: '/categories' },
-    { label: 'About', path: '/about' },
-    ...(isAdmin ? [{ label: 'Admin', path: '/admin' }] : []),
+    { label: 'Home', path: '/', icon: Home },
+    { label: 'My Profile', path: currentUser ? '/profile' : '/login', icon: User },
+    { label: 'Shop', path: '/shop', icon: ShoppingBag },
+    { label: 'Categories', path: '/categories', icon: LayoutGrid },
+    { label: 'About', path: '/about', icon: Info },
+    ...(isAdmin ? [{ label: 'Admin', path: '/admin', icon: ShieldCheck }] : []),
   ];
 
   const filteredProducts = searchQuery.trim() === '' 
@@ -192,33 +192,38 @@ export default function Navbar() {
                     initial={{ opacity: 0, x: 20, scale: 0.95 }}
                     animate={{ opacity: 1, x: 0, scale: 1 }}
                     exit={{ opacity: 0, x: 20, scale: 0.95 }}
-                    className="absolute right-0 mt-4 w-56 glass p-3 shadow-2xl z-50 overflow-hidden rounded-3xl border border-primary/20"
+                    className="absolute right-0 mt-4 w-48 glass p-2 shadow-2xl z-50 overflow-hidden rounded-3xl border border-primary/20"
                   >
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-0.5">
                       <button
                         onClick={() => {
                           toggleTheme();
                           setIsMenuOpen(false);
                         }}
-                        className="px-4 py-3 rounded-2xl text-sm font-bold uppercase tracking-widest hover:bg-primary/10 transition-colors flex items-center justify-between group"
+                        className="px-3 py-2.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 transition-colors flex items-center gap-3 group"
                       >
+                        {theme === 'light' ? <Moon className="w-4 h-4 text-primary" /> : <Sun className="w-4 h-4 text-primary" />}
                         <span className="group-hover:text-primary transition-colors">
                           {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
                         </span>
-                        {theme === 'light' ? <Moon className="w-4 h-4 text-primary" /> : <Sun className="w-4 h-4 text-primary" />}
                       </button>
                       
-                      {menuItems.map((item) => (
-                        <Link
-                          key={item.path}
-                          to={item.path}
-                          onClick={() => setIsMenuOpen(false)}
-                          className="px-4 py-3 rounded-2xl text-sm font-bold uppercase tracking-widest hover:bg-primary/10 transition-colors flex items-center justify-between group"
-                        >
-                          <span className="group-hover:text-primary transition-colors">{item.label}</span>
-                          <Anchor className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0 text-primary" />
-                        </Link>
-                      ))}
+                      <div className="h-px bg-primary/10 my-1 mx-2" />
+
+                      {menuItems.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <Link
+                            key={item.path}
+                            to={item.path}
+                            onClick={() => setIsMenuOpen(false)}
+                            className="px-3 py-2.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 transition-colors flex items-center gap-3 group"
+                          >
+                            <Icon className="w-4 h-4 text-primary opacity-70 group-hover:opacity-100 transition-opacity" />
+                            <span className="group-hover:text-primary transition-colors">{item.label}</span>
+                          </Link>
+                        );
+                      })}
                     </div>
                   </motion.div>
                 </>

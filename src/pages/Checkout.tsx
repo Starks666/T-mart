@@ -42,7 +42,48 @@ export default function Checkout() {
     customerData.zipCode.trim() !== '';
 
   const handlePayment = async () => {
-    if (paymentMethod !== 'cod' && paymentMethod !== 'card' && !transactionId) {
+    if (paymentMethod === 'bkash') {
+      setIsProcessing(true);
+      try {
+        const response = await fetch('/api/bkash/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: cartTotal, orderId: `ORD-${Date.now()}` })
+        });
+        const data = await response.json();
+        if (data.success) {
+          // In a real app, you would redirect to data.bkashURL
+          // For this mock, we'll simulate the redirect and return
+          toast.loading('Redirecting to bKash...', { duration: 2000 });
+          setTimeout(async () => {
+            const executeRes = await fetch('/api/bkash/execute', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ paymentID: data.paymentID })
+            });
+            const executeData = await executeRes.json();
+            if (executeData.success) {
+              const paymentData = {
+                method: 'bkash',
+                transactionId: executeData.trxID,
+                status: 'paid'
+              };
+              await placeOrder(customerData, paymentData);
+              setStep(3);
+              toast.success('Payment successful via bKash!');
+            }
+            setIsProcessing(false);
+          }, 2000);
+          return;
+        }
+      } catch (error) {
+        toast.error('bKash payment failed');
+        setIsProcessing(false);
+        return;
+      }
+    }
+
+    if (paymentMethod !== 'cod' && paymentMethod !== 'card' && paymentMethod !== 'bkash' && !transactionId) {
       toast.error('Please enter Transaction ID');
       return;
     }
@@ -191,7 +232,7 @@ export default function Checkout() {
                   <div className="space-y-2">
                     <p className="text-xs font-bold uppercase tracking-widest opacity-60">Payment Instructions</p>
                     <p className="text-sm opacity-80">
-                      Please send <span className="text-primary font-bold">{formatPrice(cartTotal)}</span> to our {paymentMethod} merchant number: <span className="text-primary font-bold">017XXXXXXXX</span> and enter the Transaction ID below.
+                      Please send <span className="text-primary font-bold">{formatPrice(cartTotal)}</span> to our {paymentMethod} merchant number: <span className="text-primary font-bold">+8801630989302</span> and enter the Transaction ID below.
                     </p>
                   </div>
                   <div className="space-y-2">
