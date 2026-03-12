@@ -25,16 +25,24 @@ export default function ForgotPassword() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
-      const data = await response.json();
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        throw new Error('Server returned an invalid response');
+      }
+
       if (data.success) {
-        setSentCode(data.debugCode); // In real app, this is only in email
+        setSentCode(data.debugCode);
         setStep(2);
         toast.success(data.message);
       } else {
-        toast.error(data.message);
+        toast.error(data.message || 'Failed to send code');
       }
-    } catch (error) {
-      toast.error('Failed to send verification code');
+    } catch (error: any) {
+      console.error('Send Code Error:', error);
+      toast.error(error.message || 'Failed to send verification code. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
