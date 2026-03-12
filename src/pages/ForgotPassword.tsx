@@ -48,7 +48,8 @@ export default function ForgotPassword() {
         data = JSON.parse(text);
       } catch (e) {
         console.error('JSON parse error:', e, 'Text:', text);
-        throw new Error('Server returned an invalid response format (not JSON)');
+        const snippet = text.substring(0, 50).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        throw new Error(`Server returned invalid format: ${snippet}...`);
       }
 
       if (data.success) {

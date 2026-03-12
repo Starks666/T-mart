@@ -10,6 +10,12 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Debug middleware
+  app.use("/api", (req, res, next) => {
+    console.log(`[API Request] ${req.method} ${req.url}`);
+    next();
+  });
+
   // Mock API Routes
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
