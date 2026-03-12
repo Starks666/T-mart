@@ -19,18 +19,13 @@ import Profile from './pages/Profile';
 import { motion } from 'motion/react';
 import { Anchor } from 'lucide-react';
 
+import GhostLoader from './components/GhostLoader';
+
 function AppContent() {
   const { isLoading, isAdmin } = useStore();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-bg-base">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-          <p className="text-xs font-bold uppercase tracking-widest opacity-40 animate-pulse">Initializing Store...</p>
-        </div>
-      </div>
-    );
+    return <GhostLoader />;
   }
 
   return (
