@@ -29,19 +29,26 @@ export default function ForgotPassword() {
 
     setIsSubmitting(true);
     try {
+      console.log('Sending verification code request for:', email);
       const response = await fetch('/api/auth/send-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
       
-      let data;
       const text = await response.text();
+      console.log('Server response text:', text);
+
+      if (!response.ok) {
+        throw new Error(`Server error (${response.status}): ${text.substring(0, 100)}`);
+      }
+
+      let data;
       try {
         data = JSON.parse(text);
       } catch (e) {
-        console.error('Invalid JSON response:', text);
-        throw new Error(`Server returned an invalid response format`);
+        console.error('JSON parse error:', e, 'Text:', text);
+        throw new Error('Server returned an invalid response format (not JSON)');
       }
 
       if (data.success) {
@@ -57,8 +64,8 @@ export default function ForgotPassword() {
         toast.error(data.message || 'Failed to send code');
       }
     } catch (error: any) {
-      console.error('Send Code Error:', error);
-      toast.error(error.message || 'Failed to send verification code. Please try again.');
+      console.error('Detailed Send Code Error:', error);
+      toast.error(error.message || 'Connection error. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
