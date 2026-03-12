@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { motion } from 'motion/react';
-import { LogIn, Mail, Lock, ArrowRight } from 'lucide-react';
+import { LogIn, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -52,17 +53,29 @@ export default function Login() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest opacity-50 ml-1">Password</label>
+            <div className="flex justify-between items-center ml-1">
+              <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest opacity-50">Password</label>
+              <Link to="/forgot-password" size="sm" className="text-[10px] md:text-xs font-bold text-primary hover:underline">
+                Forgot Password?
+              </Link>
+            </div>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/20" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl md:rounded-2xl py-3 md:py-4 pl-10 md:pl-12 pr-4 focus:outline-none focus:border-primary/50 transition-colors text-sm md:text-base"
+                className="w-full bg-white/5 border border-white/10 rounded-xl md:rounded-2xl py-3 md:py-4 pl-10 md:pl-12 pr-12 focus:outline-none focus:border-primary/50 transition-colors text-sm md:text-base"
                 placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-primary transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4 md:w-5 md:h-5" /> : <Eye className="w-4 h-4 md:w-5 md:h-5" />}
+              </button>
             </div>
           </div>
 

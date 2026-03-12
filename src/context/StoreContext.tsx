@@ -22,6 +22,7 @@ interface StoreContextType {
   currentUser: User | null;
   login: (email: string, password: string) => boolean;
   signup: (user: Omit<User, 'id' | 'role' | 'joinedAt'>) => void;
+  resetPassword: (email: string, newPassword: string) => Promise<boolean>;
   logout: () => void;
   updateCurrentUser: (updates: Partial<User>) => void;
   updateUserRole: (userId: string, role: 'user' | 'admin') => void;
@@ -62,19 +63,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [dbProducts, dbOrders, dbUsers] = await Promise.all([
+        console.log('Starting to load data from Supabase...');
+        // Add a timeout to the initial load
+        const dataPromise = Promise.all([
           supabaseService.getProducts(),
           supabaseService.getOrders(),
           supabaseService.getUsers()
         ]);
 
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Supabase timeout')), 10000)
+        );
+
+        const [dbProducts, dbOrders, dbUsers] = await Promise.race([dataPromise, timeoutPromise]) as any;
+        console.log('Data loaded successfully');
+
         if (dbProducts && dbProducts.length > 0) {
           setProducts(dbProducts);
         } else {
-          // If DB is empty, seed it with initial products
-          for (const p of INITIAL_PRODUCTS) {
-            await supabaseService.upsertProduct(p);
-          }
+          // If DB is empty, seed it with initial products (non-blocking)
+          console.log('Seeding database...');
+          Promise.all(INITIAL_PRODUCTS.map(p => supabaseService.upsertProduct(p)))
+            .catch(err => console.error('Failed to seed products:', err));
           setProducts(INITIAL_PRODUCTS);
         }
 
@@ -94,6 +104,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     };
 
     loadData();
+
+    // Safety timeout to ensure app always loads
+    const safetyTimeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 5000);
+
+    return () => clearTimeout(safetyTimeout);
   }, []);
 
   // Load cart from localStorage
@@ -324,6 +341,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const resetPassword = async (email: string, newPassword: string) => {
+    try {
+      await supabaseService.resetPassword(email, newPassword);
+      setUsers(prev => prev.map(u => u.email === email ? { ...u, password: newPassword } : u));
+      toast.success('Password reset successfully!');
+      return true;
+    } catch (error) {
+      console.error('Failed to reset password:', error);
+      toast.error('Failed to reset password. Please check your email.');
+      return false;
+    }
+  };
+
   const logout = () => {
     setCurrentUser(null);
     toast.success('Logged out successfully');
@@ -526,6 +556,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       currentUser,
       login,
       signup,
+      resetPassword,
       logout,
       updateCurrentUser,
       updateUserRole,

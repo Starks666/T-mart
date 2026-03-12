@@ -14,6 +14,7 @@ import Checkout from './pages/Checkout';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
 import { motion } from 'motion/react';
 import { Anchor } from 'lucide-react';
@@ -62,6 +63,7 @@ function AppContent() {
             <Route path="/admin" element={<Admin />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/categories" element={
               <div className="pt-40 text-center flex flex-col items-center">

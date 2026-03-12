@@ -58,6 +58,17 @@ export const supabaseService = {
     return data[0] as User;
   },
 
+  async resetPassword(email: string, newPassword: string) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ password: newPassword })
+      .eq('email', email)
+      .select();
+    if (error) throw error;
+    if (!data || data.length === 0) throw new Error('User not found');
+    return data[0] as User;
+  },
+
   // Notifications
   async getNotifications(userId: string) {
     const { data, error } = await supabase.from('notifications').select('*').eq('userId', userId).order('createdAt', { ascending: false });
