@@ -342,9 +342,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   };
 
   const resetPassword = async (email: string, newPassword: string) => {
+    const normalizedEmail = email.trim().toLowerCase();
     try {
-      await supabaseService.resetPassword(email, newPassword);
-      setUsers(prev => prev.map(u => u.email === email ? { ...u, password: newPassword } : u));
+      await supabaseService.resetPassword(normalizedEmail, newPassword);
+      setUsers(prev => prev.map(u => u.email.toLowerCase() === normalizedEmail ? { ...u, password: newPassword } : u));
       toast.success('Password reset successfully!');
       return true;
     } catch (error) {

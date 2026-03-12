@@ -20,10 +20,14 @@ export default function ForgotPassword() {
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check if user exists locally first
-    const userExists = users.find(u => u.email === email);
+    // Check if user exists locally first (case-insensitive)
+    const userExists = users.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
     if (!userExists) {
-      toast.error('No account found with this email address');
+      if (isLoading) {
+        toast.error('System is still loading data. Please wait a moment.');
+      } else {
+        toast.error('No account found with this email address');
+      }
       return;
     }
 
@@ -40,6 +44,9 @@ export default function ForgotPassword() {
       console.log('Server response text:', text);
 
       if (!response.ok) {
+        if (response.status === 405) {
+          throw new Error('Server Error 405: Method Not Allowed. Please contact support.');
+        }
         throw new Error(`Server error (${response.status}): ${text.substring(0, 100)}`);
       }
 

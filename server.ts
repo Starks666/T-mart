@@ -10,6 +10,17 @@ async function startServer() {
 
   app.use(express.json());
 
+  // CORS Middleware (Simple)
+  app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
+    next();
+  });
+
   // Debug middleware
   app.use("/api", (req, res, next) => {
     console.log(`[API Request] ${req.method} ${req.url}`);
@@ -22,9 +33,23 @@ async function startServer() {
   });
 
   // Verification Code Logic
-  app.post("/api/auth/send-code", async (req, res) => {
-    console.log('Received request to /api/auth/send-code:', req.body);
-    const { email } = req.body;
+  app.all("/api/auth/send-code", async (req, res) => {
+    console.log(`[Auth API] Method: ${req.method}, Path: ${req.path}, Body:`, req.body);
+    
+    if (req.method !== 'POST') {
+      return res.status(405).json({ 
+        success: false, 
+        message: `Method ${req.method} not allowed. Please use POST.` 
+      });
+    }
+
+    const { email: rawEmail } = req.body;
+    const email = rawEmail?.trim().toLowerCase();
+    
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
     try {
@@ -66,6 +91,15 @@ async function startServer() {
       res.setHeader('Content-Type', 'application/json');
       res.status(500).json({ success: false, message: "Internal server error" });
     }
+  });
+
+  // Catch-all for unmatched API routes
+  app.all("/api/*", (req, res) => {
+    console.log(`[API 404] ${req.method} ${req.url}`);
+    res.status(404).json({ 
+      success: false, 
+      message: `API route ${req.method} ${req.url} not found` 
+    });
   });
 
   // Vite middleware for development
