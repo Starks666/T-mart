@@ -24,11 +24,11 @@ export default function MobileNav() {
   return (
     <AnimatePresence>
       {isVisible && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-bg-base/80 backdrop-blur-xl border-t border-primary/10 pb-safe">
+        <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md">
           <motion.div 
-            initial={{ y: 100 }}
-            animate={{ y: 0 }}
-            className="flex items-center justify-around px-2 py-3"
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="glass rounded-3xl shadow-2xl border border-primary/10 flex items-center justify-around px-2 py-3"
           >
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
